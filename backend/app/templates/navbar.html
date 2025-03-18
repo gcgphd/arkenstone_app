@@ -1,0 +1,115 @@
+<!--
+<nav class="navbar">
+    <div class="navbar-content w-500 m-auto d-flex justify-content-between">
+        <div>
+
+        </div>
+        <a href="/index">
+            <img src="{{ url_for('static', filename='assets/Dyna_Cat.png')}}" alt="Computer man" style="height:48px;">
+        </a>
+        <div>
+
+            <div class="dropdown">
+                <span class="material-symbols-rounded hoverable-text" data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false" style="font-size: 1.4em;cursor: pointer;">menu</span>
+                <div class="dropdown-menu dropdown-menu-right p-10" aria-labelledby="...">
+
+                    <table class="table-reponsive p-0" style="border: none;border-spacing: 0;border-collapse: 0;">
+                        <tbody>
+                            <tr class="p-0">
+                                <td class="p-0">
+                                    <span class="align-middle material-symbols-rounded"
+                                        style="font-size: 1em;">account_circle</span>
+                                </td>
+                                <td class="text-truncate align-middle p-0 pl-10">
+                                    <span id="navbar-email" class="align-middle" style="font-size: 0.7em;">{{ user_email
+                                        }}</span>
+                                </td>
+                            </tr>
+                            <tr class="p-0 hoverable-text" style="border: none; cursor: pointer;"
+                                onclick="var a=document.getElementById('saved_chats_link');a.click()">
+                                <td class="p-0 pt-10">
+                                    <span class="align-middle material-symbols-rounded"
+                                        style="font-size: 1em;">folder_open</span>
+                                </td>
+                                <td class=" align-middle m-0 pt-10 p-0 pl-10">
+                                    <span class="align-middle" style="font-size: 0.7em;">Saved Chats</span>
+                                    <a id="saved_chats_link" href="/saved_chats" style="display:none;"></a>
+                                </td>
+                            </tr>
+
+                            <tr id="navbar-reset-pswd" class="p-0 hoverable-text"
+                                style="border: none; cursor: pointer;">
+                                <td class="p-0 pt-5">
+                                    <span class="align-middle material-symbols-rounded"
+                                        style="font-size: 1em;">password</span>
+
+                                </td>
+                                <td class="text-truncate align-middle pt-5 p-0 pl-10">
+                                    <span class="align-middle" style="font-size: 0.7em;">Change Password</span>
+                                </td>
+                            </tr>
+
+                            <tr id="navbar-signout" class="p-0 hoverable-text" style="border: none; cursor: pointer;">
+                                <td class="p-0 pt-5">
+                                    <span class="align-middle material-symbols-rounded"
+                                        style="font-size: 1em;">logout</span>
+                                </td>
+                                <td class="text-truncate align-middle pt-5 p-0 pl-10">
+                                    <span class="align-middle" style="font-size: 0.7em;">Logout</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</nav>
+-->
+
+<nav class="navbar navbar-expand-lg"
+    style="background-color: var(--bs-content-bg); border-bottom: var(--bs-border-width) solid var(--bs-content-border-color);">
+    <div class="container-fluid justify-content-center">
+        <a class="navbar-brand" href="#">
+            <img src="{{ url_for('static', filename='assets/Logo.png')}}" alt="Arkenstone Designs" style="height:32px;">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-collapse-1"
+            aria-controls="navbar-collapse-1" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbar-collapse-1">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#">Docs</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Product
+                    </a>
+                    <ul class="dropdown-menu mt-lg-2 rounded-top-0">
+                        <li><a class="dropdown-item" href="#">Page builder</a></li>
+                        <li><a class="dropdown-item" href="#">Form builder</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#">Plan and pricing</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled">Blog</a>
+                </li>
+            </ul>
+            <form class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="Search docs" aria-label="Search">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </form>
+        </div>
+    </div>
+</nav>

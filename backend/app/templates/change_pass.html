@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+
+{% block body %}
+
+<div class="page-wrapper">
+    {% include "alert.html" %}
+    <!-- Content wrapper -->
+    <div class="content-wrapper">
+
+        <div class="container-center" style="flex-direction:column">
+            <div class="row pt-10" style="width:100%; max-width: 400px; max-height:500px">
+                <div class="col">
+
+                    <div id="login-card" class="card p-0 m-0 border border-0" style="display:block;">
+
+                        <div class="d-flex m-auto justify-content-center">
+                            <img class="img-fluid" src="{{ url_for('static', filename='assets/Dyna_Cat.png')}}" alt="Computer man" style="max-height:64px;">
+                        </div>
+
+                        </br></br>
+
+                        <form  id="change-pswd-form" class="mw-full m-20 mt-5 p-20 pt-0 pb-0"> <!-- w-400 = width: 40rem (400px), mw-full = max-width: 100% -->
+                            <!-- Input -->
+                            <div class="form-group form-group-sm mb-10" style="font-size: 1.2rem;">
+                                <label for="full-name">Email</label>
+                                <input type="text" name="email" class="form-control form-control-sm" id="email" placeholder="example@gmail.com" required="required" style="font-size: 0.8em;">
+                            </div>
+                            
+
+                            <div class="row mt-20">
+                                <div class="col-12 p-0 m-auto">
+                                    <input id="reset-pswd-button" class="btn btn-sm btn-primary w-full" style="font-size: 0.8em;" type="button" value="Reset">
+                                </div>
+                            </div>
+                        
+                        </form>
+                    </div>
+                </div>
+            </div>
+          
+        </div>
+
+    </div>
+</div>
+
+
+{%- endblock body %} 
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/change_pass.js')}}"></script>
+{%- endblock scripts %} 

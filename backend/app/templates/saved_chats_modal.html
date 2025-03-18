@@ -1,0 +1,31 @@
+<!-- First comes the modal -->
+<div class="modal" id="modal-1" tabindex="-1" role="dialog" style="font-size: 0.9em;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="width:80%;"> <!--max-width:500px;max-height:350px-->
+            
+            <a href="#" id="modal-close" class="close" role="button" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </a>
+
+            <div class="container"> 
+                <div class="row p-0" style="width:100%">
+                    <div class="col">
+                        <div class="card p-0 m-0 border border-0" style="display:block;">
+                            
+                            <!-- the Loader -->
+                            <div id="modal-loader" class="card mw-full p-0 border-0" style="display:none;">
+                                <div class="container-center">
+                                    <img src="{{ url_for('static', filename='assets/icon-maneki-cat.gif')}}" alt="Computer man" style="width:64px;height:64px;">
+                                </div>
+                            </div>
+
+                            <div id="chat-history-content">
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

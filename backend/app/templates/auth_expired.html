@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+
+{% block body %}
+
+<div class="page-wrapper with-navbar">
+    {% include "navbar_nomenu.html" %}
+    <!-- Content wrapper -->
+    <div class="content-wrapper">
+
+        <div class="container-center" style="flex-direction:column">
+
+            <div class="row p-20" style="width:100%; max-width:500px; max-height:500px">
+                <div class="col text-center">   
+                    <img class="img-fluid" src="{{ url_for('static', filename='assets/Cry_Cat.png')}}" alt="Computer man" style="width:70%;">
+                </div>
+            </div>    
+
+            <div class="row p-20" style="width:100%; max-width:500px; max-height:500px">
+                <div class="col-12 text-center m-auto" style="font-size: 0.8em;">  
+                    Your authorization has expired. Please login again to continue browsing.
+                </div>
+            </div>
+
+            <div class="row" style="width:100%; max-width:500px; max-height:500px">
+                <div class="col-2 m-auto" style="font-size: 0.8em;">  
+                    <a class="m-auto" href="/login?target={{ redirect_target }}">
+                        <input class="btn btn-sm btn-primary w-full" style="font-size: 0.8em;" type="button" value="Sign In">
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+{%- endblock body %} 
+
+{% block scripts %}
+<script>
+</script>
+
+{%- endblock scripts %} 

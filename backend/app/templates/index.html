@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+
+{% block body %}
+
+<div class="page-wrapper with-navbar">
+    {% include "alert.html" %}
+    {% include "navbar.html" %}
+    
+    <div class="content-wrapper">
+        <div class="container-fluid">
+            <div id="chat-history-card" class="card w-500 m-auto mt-20 p-15" style="display:none;">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="d-flex flex-row">
+                            <div id="chat-title" class="d-inline mr-10" style="font-size:1.2em;font-weight:700;" contenteditable="false" onclick="">Your Chat Result</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex flex-row-reverse">
+                            <div class="dropdown">
+                                <div data-toggle="tooltip" data-title="Save" data-placement="bottom">
+                                    <span id="save-icon" class="material-symbols-rounded hoverable-text ml-5" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 1.2em;cursor: pointer;" onclick="">save</span>
+                                </div>
+                                <div id ="save-dropdown" class="dropdown-menu dropdown-menu-right p-10" aria-labelledby="..." >
+
+                                    <div id="save-loader" class="card mw-full p-0 border-0" style="display: none;">
+                                        <div class="container-center">
+                                            <img src="{{ url_for('static', filename='assets/icon-maneki-cat.gif')}}" alt="Computer man" style="width:64px;height:64px;">
+                                        </div>
+                                        <div class="mt-0 container-center" style="font-size: 0.8em;">Processing ...</div>
+                                    </div>
+
+                                    <form id="save-form" class="mw-full pt-20 pb-0"> <!-- w-400 = width: 40rem (400px), mw-full = max-width: 100% -->
+                                        <div class="form-group form-group-sm">
+                                            <input type="text" name="email" class="form-control form-control-sm" id="chatname" placeholder="Chat name" required="required" style="font-size: 0.7em;">
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12 p-0">
+                                                <input id="btn-submit-save" class="btn btn-sm btn-primary w-full" style="font-size: 0.7em;" type="button" value="Save">
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                       
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-5">
+                    <div class="col-2">
+                        <input id="btn-new-chat" class="btn btn-sm btn-primary w-full" style="font-size: 0.7em;" type="button" value="New Chat">
+                        <!--
+                        <a style="color:#e8909e;cursor: pointer;font-size: 0.7em;">New Chat</a>
+                        -->
+                    </div>
+                </div>
+                </br>
+
+
+                <div id="chat-history-content">
+                </div>
+
+            </div>
+        </div>
+        
+        
+        <div class="container-center">
+            <div class="row">
+                <div class="col">
+        
+                    <div id="loader" class="card w-500 p-15 border-0" style="display:none;">
+                        <div class="container-center">
+                            <img src="{{ url_for('static', filename='assets/icon-consultation-alt.gif')}}" alt="Computer man" style="width:96px;height:96px;">
+                        </div>
+                        <div class="mt-20 container-center">Processing ... This might take up to 5 minutes</div>
+                    </div>
+        
+                    <div id="upload-card" class="card w-500 p-15">
+                        
+                        <div id="file-upload-area" class="card p-20 m-0 mt-20 hoverable-text"
+                            style="border-style:dashed;cursor:pointer;">
+                            <div class="text-center" style="font-weight:300px;font-size:1.2rem;">
+                                <input type="file" id="file-upload" multiple style="display:none" />
+                                
+                                <!--
+                                <lord-icon
+                                    src="https://cdn.lordicon.com/wfadduyp.json"
+                                    trigger="hover"
+                                    colors="primary:#11172c"
+                                    style="width:24px;height:24px">
+                                </lord-icon>
+                                -->
+                                
+                                <span class="material-symbols-rounded" style="font-size: 1.6em;">upload</span>
+                                
+                                <div class="m-5"  style="font-size:0.9em;">Chose your Files to Upload or Drag any number of Files</div>
+                                <div class="m-5" style="font-size: 0.8em;">PDF format only</div>
+                            </div>
+                        </div>
+        
+                        <div class="mt-20 d-flex" style="font-weight:300px;flex-direction:column;flex-grow:1;">
+                            <span style="font-size:0.8em;font-weight: bold;">Uploaded Files</span>
+                            <div class="mt-10" id="uploaded-files" style="font-size:0.7em;">
+                            </div>
+                        </div>
+        
+                        
+                        <button id="btn-submit" class="btn btn-sm btn-primary mt-20" type="button">Submit</button>
+                        
+                    </div>
+                    <div class="text-center" style="font-weight:300px;font-size:1.2rem;">
+                        Dynacat can make mistakes. Consider checking important information.
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{%- endblock body %}
+
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/navbar.js')}}"></script>
+<script src="{{ url_for('static', filename='js/index.js')}}"></script>
+{%- endblock scripts %}

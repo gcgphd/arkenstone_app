@@ -1,0 +1,235 @@
+
+/* GOOGLE Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+/* GOOGLE Icons
+.material-symbols-sharp {
+    font-variation-settings:
+    'FILL' 0,
+    'wght' 700,
+    'GRAD' 0,
+    'opsz' 48;
+    color: #11172C;
+    font-size: 300%;
+}
+
+.material-symbols-sharp.alt {
+    font-variation-settings:
+    'FILL' 0,
+    'wght' 700,
+    'GRAD' 0,
+    'opsz' 48;
+    color: white;
+    font-size: 300%;
+}
+
+.material-symbols-sharp.pink {
+    font-variation-settings:
+    'FILL' 0,
+    'wght' 700,
+    'GRAD' 0,
+    'opsz' 48;
+    color: #e8909e;
+    font-size: 300%;
+}
+*/
+
+.pink{color:#e16277}
+
+.wait {
+    cursor: wait;
+  }
+
+  input[type="checkbox"] { /* change "blue" browser chrome to yellow */
+    filter: invert(100%) hue-rotate(315deg) brightness(1.2);
+  }
+
+a.nav-link:hover {color:#e16277}
+a.nav-link {color:#1b3045}
+a.btn{color:#1b3045;}
+
+a.badge.one{color:#94a0a6;background-color: #11172C; border-color:#94a0a6;}
+a.badge.one:hover{color:#e8909e; border-color: #e8909e; background-color: #11172C;}
+
+span.btn-span{font-size: 16px;}
+i.icon-hover-alt:hover{color:#e16277}
+i.icon-hover-alt {color:white}
+
+i.icon-hover:hover{color:#e16277}
+i.icon-hover {color:#11172C}
+
+select.form-control.select-sidebar,input.form-control.side{color:#94a0a6;background-color: #11172C; border-color:#94a0a6; }
+.form-control.select-sidebar:focus {
+    color: #94a0a6;
+    border-color: #e8909e;
+    box-shadow: 0 0 0 0.1rem #e8909e;
+    }
+.form-control.select-sidebar:hover {
+    color: #e8909e;
+    }
+
+.btn.btn-link.side-link{color:#94a0a6}
+.btn.btn-link.side-link:focus{
+    color:#94a0a6;
+    border-color: #e8909e;
+    box-shadow: 0 0 0 0.1rem #e8909e;
+}
+.btn.btn-link.side-link:hover{
+    color: #e8909e;}
+
+.one-link{
+    color:#94a0a6;
+}
+.one-link:hover{
+    color: #e8909e;}
+
+.one-card{
+    background-color: #11172C;
+    color:#94a0a6;
+}
+
+
+/* Tooltip container */
+.one-dialog {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+
+/* Tooltip text */
+.one-dialog .dialogtext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+
+    /* Position the tooltip text - see examples below! */
+    position: absolute;
+    z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.one-dialog:hover .dialogtext {
+    visibility: visible;
+}
+
+/* My Custom Modal */
+.one-modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+
+    transform: scale(1.15);
+
+    transition:
+        transform 0.1s cubic-bezier(0.465, 0.183, 0.153, 0.946),
+        opacity 0.1s cubic-bezier(0.465, 0.183, 0.153, 0.946);
+}
+
+.one-modal.visible {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+/* Modal Content */
+.one-modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 70%;
+    height: 80%;
+}
+
+/* The Close Button */
+.modal-close {
+    color: #11172C;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position:absolute;
+    top:10%;
+    left:10%;
+}
+
+.modal-close:hover,
+.modal-closeclose:focus {
+    color: #e16277;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+/* Custom Loader with Dots *******************/
+
+.loader{
+    position: absolute;
+    top:0px;
+    right:0px;
+    width:100%;
+    height:100%;
+    background-color:#eceaea;
+    background-image:url('/static/assets/infinity-spinner.gif');
+    background-size: 50px;
+    background-repeat:no-repeat;
+    background-position:center;
+    z-index:10000000;
+    opacity: 0.4;
+    filter: alpha(opacity=40);
+}
+/*******************************************/
+
+
+.side{color:#94a0a6;background-color: #11172C; border-color:#94a0a6;}
+.side:focus{color:#94a0a6;border-color: #e8909e;box-shadow: 0 0 0 0.1rem #e8909e;}
+.side:hover{color:#e8909e}
+
+label.side{color: #e8909e;}
+
+::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+
+/**** Style for Dynascreen **************/
+
+.table-client {
+    font-size: 60%;
+}
+
+.table-client-head{
+    font-size: 100%;
+    height: 50px;
+    padding:0px;
+}
+
+.table-dropdown{
+    font-size: 120%;
+}
+
+.dropdown-filter{
+    height:1500%;
+    width:50%;
+    overflow: hidden;
+}
+
+.btn-apply{
+    height: 20%;
+    font-size: 120%;
+}
+
+/**************************************/

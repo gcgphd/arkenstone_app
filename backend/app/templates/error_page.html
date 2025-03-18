@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+
+{% block body %}
+
+<div class="page-wrapper with-navbar">
+    {% include "navbar_nomenu.html" %}
+    <!-- Content wrapper -->
+    <div class="content-wrapper">
+
+        <div class="container-center" style="flex-direction:column">
+
+            <div class="row p-20" style="width:100%; max-width:500px; max-height:500px">
+                <div class="col text-center">   
+                    <img class="img-fluid" src="{{ url_for('static', filename='assets/Dead_Cat_1.png')}}" alt="Computer man" style="width:70%;">
+                </div>
+            </div>    
+
+            <div class="row p-20" style="width:100%; max-width:500px; max-height:500px">
+                <div class="col text-center" style="font-size: 0.8em;">  
+                An unexpected error occurred. Try to login again. If the problem persists contact the client support.
+                </div>
+            </div>
+
+            <div class="row" style="width:100%; max-width:500px; max-height:500px">
+                <div class="col-2 m-auto" style="font-size: 0.8em;">  
+                    <a class="m-auto" href="/login">
+                        <input class="btn btn-sm btn-primary w-full" style="font-size: 0.8em;" type="button" value="Sign In">
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+{%- endblock body %} 
+
+{% block scripts %}
+<script>
+</script>
+
+{%- endblock scripts %} 

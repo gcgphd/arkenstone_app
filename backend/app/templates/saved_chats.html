@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+{% include "saved_chats_modal.html" %}
+
+<div class="page-wrapper with-navbar">
+    {% include "alert.html" %}
+    {% include "navbar.html" %}
+    
+    <div class="content-wrapper">
+
+
+        <div class="container-fluid">
+            <!-- This is the Loader -->
+            <div id="save-loader" class="card mw-full p-0 border-0" style="height:90vh;display:none;">
+                <div class="container-center">
+                    <img src="{{ url_for('static', filename='assets/icon-maneki-cat.gif')}}" alt="Computer man" style="width:64px;height:64px;">
+                </div>
+            </div>
+            
+            <div id="chat-titles-card" class="card w-500 m-auto mt-20 p-15" style="display:block;">
+                
+                <div class="row">
+                    <div class="col-6">
+                        <div class="d-flex flex-row">
+                            <div id="chat-title" class="d-inline mr-10" style="font-size:1.2em;font-weight:700;" contenteditable="false" onclick="">Saved Chats</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex flex-row-reverse">
+                        </div>
+                    </div>
+                </div>
+
+                <br />
+                <a href="#modal-1" id="modal-trigger" style="display:none"></a>
+
+                <table id="chat-titles-table" class="table" style="width:100%">
+                
+                </table>
+
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+{%- endblock body %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/navbar.js')}}"></script>
+<script src="{{ url_for('static', filename='js/saved_chats.js')}}"></script>
+{%- endblock scripts %}

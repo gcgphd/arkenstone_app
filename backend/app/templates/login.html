@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+
+{% block body %}
+
+<div class="page-wrapper">
+    {% include "alert.html" %}
+    <!-- Content wrapper -->
+    <div class="content-wrapper">
+
+        <div id="save-loader" class="card mw-full p-0 border-0" style="height:90vh;display:none;">
+            <div class="container-center">
+                <img src="{{ url_for('static', filename='assets/icon-maneki-cat.gif')}}" alt="Computer man"
+                    style="width:64px;height:64px;">
+            </div>
+        </div>
+
+        <div class="container-center" style="flex-direction:column">
+            <div class="row pt-10" style="width:100%; max-width: 400px; max-height:500px">
+                <div class="col">
+
+                    <div id="login-card" class="card p-0 m-0 border border-0" style="display:block;">
+
+                        <div class="d-flex m-auto justify-content-center">
+                            <img class="img-fluid" src="{{ url_for('static', filename='assets/Dyna_Cat.png')}}"
+                                alt="Computer man" style="max-height:64px;">
+                        </div>
+
+                        </br></br>
+
+                        <form id="signin-form" class="mw-full m-20 mt-5 p-20 pt-0 pb-0">
+                            <!-- w-400 = width: 40rem (400px), mw-full = max-width: 100% -->
+                            <!-- Input -->
+                            <div class="form-group form-group-sm mb-10" style="font-size: 1.2rem;">
+                                <label for="full-name">Email</label>
+                                <input type="text" name="email" class="form-control form-control-sm" id="email"
+                                    placeholder="example@gmail.com" required="required" style="font-size: 0.8em;">
+                            </div>
+
+                            <div class="form-group mt-0" style="font-size: 1.2rem;">
+                                <label for="pswd-group">Password</label>
+                                <div class="input-group input-group-sm" id="pswd-group">
+                                    <input type="password" name="password" class="form-control border border-right-0"
+                                        id="pswd" placeholder="" required="required" style="font-size: 0.8em;">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text border border-left-0"
+                                            style="background-color: #ffffff;">
+                                            <span id="visibility-icon" data-show="hidden"
+                                                class="material-symbols-rounded"
+                                                style="font-size: 0.8em;cursor:pointer;">visibility</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-20">
+                                <div class="col-12 p-0 m-auto">
+                                    <input id="signin-button" class="btn btn-sm btn-primary w-full"
+                                        style="font-size: 0.8em;" type="button" value="Sign In">
+                                </div>
+                            </div>
+
+                        </form>
+
+                        </br></br>
+
+                        <div class="text-center mt-10" style="font-size:0.8em">
+                            Forgot your password?
+                            <a href="/change_pass" style="font-weight:bold;color:#e8909e;cursor: pointer;">Reset</a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+
+{%- endblock body %}
+
+{% block scripts %}
+
+
+<script src="{{ url_for('static', filename='js/signin.js')}}"></script>
+{%- endblock scripts %}
