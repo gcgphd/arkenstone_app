@@ -81,7 +81,11 @@ const AppMenu: React.FC = () => {
             mode="inline"
             items={items}
             style={{ height: "100vh", }}
-        />
+        >
+            <div>
+                Ciao
+            </div>
+        </Menu>
     );
 };
 

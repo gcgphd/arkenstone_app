@@ -19,3 +19,23 @@ export const login = async (email: string, password: string) => {
 
     return await response.json();
 };
+
+
+export const logout = async () => {
+    const response = await fetch(
+        //`${import.meta.env.VITE_API_BASE_URL}/auth/login`,
+        `${API_BASE_URL}/signout`,
+        {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+        }
+    );
+
+    if (!response.ok) {
+        var error_message = await response.json()
+        throw new Error(error_message.message);
+    }
+
+    return await response.json();
+};

@@ -22,7 +22,6 @@ const LoginCard: React.FC = () => {
         //setLoading(true);
         try {
             const data = await login(values.email, values.password);
-            localStorage.setItem("token", data.token);
             openNotificationWithIcon('success', 'Login successful!', '');
             //setIsLoggedIn(true);
             navigate("/");

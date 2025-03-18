@@ -14,7 +14,7 @@ def make_signin_response(response,code):
     
     if code != 200:
         resp = make_response(jsonify(response), code)
-        #revoke_cookies(['idToken','refreshToken'],resp)
+        revoke_cookies(['idToken'],resp)
         return resp
 
     data = {
@@ -92,7 +92,7 @@ def signout():
     if request.method == 'GET': 
         try:
             resp = make_response(jsonify({"message":"succesfully logged out"}),200)
-            revoke_cookies(['idToken'],resp)
+            revoke_cookies(['idToken'], resp)
             return resp
         
         except Exception as e:

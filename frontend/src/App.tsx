@@ -1,8 +1,7 @@
 
 import { useState } from 'react'
-import AppMenu from './components/AppMenu';
-import LoginCard from './components/LoginCard';
-import ContentCenter from './components/ContentCenter';
+import CustomMenu from './components/CustonMenu';
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -27,6 +26,9 @@ const config: ThemeConfig = {
     colorLink: '#F9442E',
     fontFamily: "'Bricolage Grotesque', sans-serif",
   },
+  components: {
+    Layout: { siderBg: '#131313', colorPrimary: "#F9442E" }
+  }
 };
 // By static function
 //const globalToken = getDesignToken(config);
@@ -45,8 +47,9 @@ function App() {
             position: "sticky",
             top: 0,
             left: 0
-          }}>
-            <AppMenu />
+          }}
+          >
+            <CustomMenu />
           </Sider>
           <Layout>
             <Content style={{ margin: 0 }}>
