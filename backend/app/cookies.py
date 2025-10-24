@@ -1,4 +1,4 @@
-from config import cookies_max_age,disabled_cookies
+from config import cookies_max_age,disabled_cookies,is_prod
 
 
 def set_cookies(cookie_dict,response):
@@ -6,10 +6,11 @@ def set_cookies(cookie_dict,response):
          response.set_cookie(
             k,
             v,
-            max_age=cookies_max_age,
-            httponly=True,  # recommended for security
-            samesite="Strict",  # required for cross-origin
-            secure=True      # required if samesite="None"
+            max_age=36000,
+            httponly=True,    # recommended for security
+            samesite="None" if is_prod else "Lax",
+            secure=is_prod,
+            path='/'  
         )
 
     # disabling listed tokens
@@ -21,5 +22,5 @@ def set_cookies(cookie_dict,response):
 
 def revoke_cookies(cookie_list,response):
     for c in cookie_list:
-         response.set_cookie(c, '', expires=0, max_age=0, path='/',httponly=True, secure=True, samesite="None")
+         response.set_cookie(c, '', expires=0, max_age=0 ,httponly=True, secure=True, samesite="Strict")
     return response

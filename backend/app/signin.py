@@ -3,11 +3,9 @@ from flask import request,make_response,jsonify
 from .cookies import *
 from .token import *
 from .requests_utils import *
+from config import firebase_auth_api
 import requests
 import json
-
-firebase_auth_api  = "https://identitytoolkit.googleapis.com/v1/accounts"
-firebase_token_api =  "https://securetoken.googleapis.com/v1/token"
 
 
 def make_signin_response(response,code):

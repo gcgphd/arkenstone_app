@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from "react-router-dom";
-import { UserOutlined, MailOutlined, SettingOutlined } from '@ant-design/icons';
+import { UserOutlined, MailOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
 import { Button, Flex, Popover } from 'antd';
 
 import { logout } from "../services/authService";
@@ -29,7 +29,7 @@ const CustomMenu: React.FC = () => {
 
     const popoverContent = (
         <div>
-            <a onClick={onLogoutClick}>Logout</a>
+            <Button type="link" size="small" onClick={onLogoutClick}>Logout</Button>
         </div>
     )
 
@@ -44,7 +44,7 @@ const CustomMenu: React.FC = () => {
                     placement="rightBottom"
                     content={popoverContent}
                 >
-                    <Button icon={<UserOutlined />} size={"small"} />
+                    <Button icon={<UserOutlined />} size="small" />
                 </Popover>
             </Flex>
         </Flex>

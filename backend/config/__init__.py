@@ -3,12 +3,21 @@ from google.cloud import secretmanager
 import google_crc32c
 
 
+is_prod = False
+
 # age of cookies is expressed in seconds
 # i.e. 60*30 = 30 minutes
 cookies_max_age = 60*30 
 
 # list of cookies to disable
 disabled_cookies = [] #"refreshToken"
+
+# firebase endpoints
+firebase_auth_api  = "https://identitytoolkit.googleapis.com/v1/accounts"
+firebase_token_api =  "https://securetoken.googleapis.com/v1/token"
+
+upload_dir = os.path.join(os.getcwd(),'uploads')
+
 
 # secret access manager
 def access_secret_version(

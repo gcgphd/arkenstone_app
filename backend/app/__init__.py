@@ -12,7 +12,7 @@ from firebase_admin import firestore,credentials
 app = Flask(__name__)
 
 # Configure CORS to allow your frontend domain
-CORS(app,origins=["http://localhost:5173"], supports_credentials=True)
+CORS(app,origins="http://127.0.0.1:5173", supports_credentials=True)
 
 # csrf protection
 app.secret_key = b'_gfgfhghf347884748934?!-s1>'
@@ -32,7 +32,7 @@ limiter = Limiter(
 )
 
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1000 * 1000
-
+app.config['UPLOAD_DIR'] = os.path.join(os.getcwd(),'uploads')
 
 # initialize firebase
 
@@ -47,4 +47,4 @@ with app.app_context():
     fb = firebase_admin.initialize_app() 
     db = firestore.client()
 
-from app import signin
+from app import signin,token,upload_image
