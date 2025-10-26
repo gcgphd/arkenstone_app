@@ -9,7 +9,7 @@ from .requests_utils import *
 
 # @app.route('/api/test-cookies', methods=["GET"])
 # def test_cookies():
-#     print("Received cookies:", request.cookies)
+#     print("Received cookies:", regetquest.cookies)
 #     return {"cookies": request.cookies}, 200
 
 

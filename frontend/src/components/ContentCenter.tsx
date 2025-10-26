@@ -1,19 +1,52 @@
-import { Row, Col } from "antd";
+import { Row, Col, Flex } from "antd";
 import React from "react";
+
 
 interface ContentCenterProps {
     children: React.ReactNode;
+    direction?: string;               // boolean is more idiomatic
+    style?: React.CSSProperties;      // allow passing styles
+    className?: string;
+    gap?: number | string;
 }
 
-const ContentCenter: React.FC<ContentCenterProps> = ({ children }) => {
-    return (
-        <Row gutter={[16, 16]} style={{ height: "100vh", width: "100%", display: "flex", alignContent: "center" }}>
-            <Col
-                lg={{ span: 10, offset: 7 }} md={{ span: 6, offset: 9 }} sm={{ span: 8, offset: 8 }} xs={{ span: 14, offset: 5 }}>
+const ContentCenter: React.FC<ContentCenterProps> = ({
+    children,
+    direction = 'horizontal',
+    style,
+    className,
+    gap = 16
+}) => {
+
+    if (direction === 'vertical') {
+        return (
+            <Flex
+                vertical
+                justify="center"
+                align="center"
+                className={className}
+                style={{ height: "100%", width: "100%", minHeight: 0, ...style }} // minHeight:0 fixes flex overflow in columns
+                gap={gap}
+            >
                 {children}
-            </Col>
-        </Row>
+            </Flex>
+        );
+    }
+
+    return (
+        <Flex
+            justify="center"
+            align="center"
+            className={className}
+            style={{ height: "100%", width: "100%", minHeight: 0, ...style }} // minHeight:0 fixes flex overflow in columns
+            gap={16}
+        >
+            {children}
+        </Flex>
     );
 };
 
 export default ContentCenter;
+
+
+

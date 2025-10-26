@@ -35,7 +35,9 @@ const LoginCard: React.FC = () => {
 
     return (
 
-        <Card>
+        <Card
+        //style={{ maxWidth: 360 }}
+        >
             {contextHolder}
             <Form
                 name="login"
