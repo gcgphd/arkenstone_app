@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 from flask_wtf import CSRFProtect 
@@ -6,7 +7,11 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import firebase_admin
 from firebase_admin import firestore,credentials
+from google.cloud import storage
 #from config import cred
+
+# load env variables
+load_dotenv()
 
 # initialize flask app
 app = Flask(__name__)
@@ -31,8 +36,10 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1000 * 1000
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1000 * 1000    
 app.config['UPLOAD_DIR'] = os.path.join(os.getcwd(),'uploads')
+
+
 
 # initialize firebase
 
@@ -46,5 +53,6 @@ app.config['UPLOAD_DIR'] = os.path.join(os.getcwd(),'uploads')
 with app.app_context():
     fb = firebase_admin.initialize_app() 
     db = firestore.client()
+    storage_client = storage.Client()
 
-from app import signin,token,upload_image
+from app import signin,token,upload_image,upload_image_cdn,generate_from_disk

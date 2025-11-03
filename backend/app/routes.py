@@ -3,7 +3,7 @@ from flask import request,render_template,jsonify,make_response,abort
 from .users import user_info
 from .auth import token_auth_step,set_cookies,revoke_cookies,token_required,token_auth_step_new
 from .chats import save_chat,delete_chat,get_saved_chats
-from .prompts import prompt
+from ..prompts.dress_prompts import prompt
 import re
 
 

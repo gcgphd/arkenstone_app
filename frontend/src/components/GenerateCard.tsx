@@ -3,6 +3,7 @@ import { Grid, Card } from "antd";
 import { PlusOutlined } from '@ant-design/icons';
 import { Image, Upload, message, Button } from 'antd';
 import type { GetProp, UploadFile, UploadProps } from 'antd';
+import { BACKEND_URL } from "../config";
 
 const { useBreakpoint } = Grid;
 
@@ -165,7 +166,7 @@ const GenerateCard: React.FC<GenerateCardProps> = ({
       }}
     >
       <Upload
-        action="http://localhost:8080/upload_image_to_dir"
+        action={`${BACKEND_URL}/upload_image_to_gcs_signed`}
         listType="picture-card"
         fileList={fileList}
         onPreview={handlePreview}
@@ -179,18 +180,20 @@ const GenerateCard: React.FC<GenerateCardProps> = ({
 
         {fileList.length >= 8 ? null : uploadButton}
       </Upload>
-      {previewImage && (
-        <Image
-          wrapperStyle={{ display: 'none' }}
-          preview={{
-            visible: previewOpen,
-            onVisibleChange: (visible) => setPreviewOpen(visible),
-            afterOpenChange: (visible) => !visible && setPreviewImage(''),
-          }}
-          src={previewImage}
-        />
-      )}
-    </Card>
+      {
+        previewImage && (
+          <Image
+            wrapperStyle={{ display: 'none' }}
+            preview={{
+              visible: previewOpen,
+              onVisibleChange: (visible) => setPreviewOpen(visible),
+              afterOpenChange: (visible) => !visible && setPreviewImage(''),
+            }}
+            src={previewImage}
+          />
+        )
+      }
+    </Card >
   );
 };
 

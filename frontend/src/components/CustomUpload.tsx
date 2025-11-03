@@ -15,6 +15,7 @@ type CustomUploadProps = {
     buttonText?: string;
     block?: boolean;
     withDrop?: boolean;
+    deferPreviewUntilSuccess?: boolean;
 };
 
 const { Text } = Typography;
@@ -31,6 +32,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
     buttonText = "Upload Media",
     block = true,
     withDrop = true,
+    deferPreviewUntilSuccess = true,
 }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
@@ -41,6 +43,13 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
     useEffect(() => () => { if (objectUrl) URL.revokeObjectURL(objectUrl); }, [objectUrl]);
 
     const pickFile = () => inputRef.current?.click();
+
+    const maybeLocalPreview = (file: File) => {
+        if (deferPreviewUntilSuccess) return;
+        const url = URL.createObjectURL(file);
+        setObjectUrl(url);
+        onLocalPreview?.(url, file);
+    };
 
     const startLocalPreview = (file: File) => {
         const url = URL.createObjectURL(file);
@@ -104,9 +113,10 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
     }, [action, beforeUpload, maxSizeMB, name, onError, onSuccess]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (uploading) return;
         const f = e.target.files?.[0];
         if (f) {
-            startLocalPreview(f); // 👈 show instantly
+            maybeLocalPreview(f); // 👈 show instantly
             uploadFile(f);
         }
         e.target.value = "";
@@ -143,16 +153,28 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
                         padding: 16,
                         marginBottom: 12,
                         textAlign: "center",
-                        cursor: "pointer",
+                        cursor: uploading ? "not-allowed" : "pointer",
                         background: dragOver ? "rgba(0,0,0,0.03)" : undefined,
                         transition: "background 0.15s",
+                        opacity: uploading ? 0.6 : 1,
                     }}
                 >
+                    <Text type="secondary">
+                        {uploading ? "Uploading…" : "Drop an image here or click to select"}
+                    </Text>
                 </div>
             )}
 
-            <Button icon={<UploadOutlined />} onClick={pickFile} loading={uploading} block={block}>
-                {buttonText}
+            {/* ✅ Primary, loading, disabled until upload completes */}
+            <Button
+                icon={!uploading ? <UploadOutlined /> : undefined}
+                iconPosition="end"
+                onClick={pickFile}
+                loading={uploading}
+                disabled={uploading}
+                block={block}
+            >
+                {uploading ? "Loading" : buttonText}
             </Button>
 
             {uploading && (
@@ -167,6 +189,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
                 accept={accept}
                 style={{ display: "none" }}
                 onChange={handleInputChange}
+                disabled={uploading}
             />
         </div>
     );

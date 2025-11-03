@@ -1,8 +1,9 @@
 import React from "react";
 import { Button, Grid, UploadFile } from "antd";
-import { ReloadOutlined, CloudUploadOutlined } from "@ant-design/icons";
+import { ReloadOutlined, SendOutlined } from "@ant-design/icons";
 import GenerateCard from "./GenerateCard";
-
+import ThumbnailRail, { ThumbItem } from "./ThumbnailRail"
+import { BACKEND_URL } from "../config";
 const { useBreakpoint } = Grid;
 
 interface PreviewPanelProps {
@@ -41,6 +42,19 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   const MAX_W = 1000;
 
   const [galleryFiles, setGalleryFiles] = React.useState<UploadFile<any>[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isJobQueued, setIsJobQueued] = React.useState(false);
+  const [thumbnails, setThumbnails] = React.useState<ThumbItem[]>([]);
+
+
+  const addLoadingThumb = React.useCallback(() => {
+    const id = `tmp-${Date.now()}`;
+    setThumbnails((prev) => [
+      { id, src: "/assets/image-loader-light.gif", alt: "Generating…", status: "loading" },
+      ...prev,
+    ]);
+    return id;
+  }, []);
 
   // Turn relative into absolute (adjust base to your backend origin)
   const toAbsolute = (u?: string) =>
@@ -103,8 +117,12 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   );
 
   const handleSubmit = async () => {
+    let thumbId: string | null = null;
     try {
-      const res = await fetch("http://localhost:8080/collect_media", {
+      setIsLoading(true);
+      return
+      // 👈 add the loading GIF to the rail
+      const res = await fetch(`${BACKEND_URL}/queue_generation_job`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -114,10 +132,19 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
         throw new Error(`Backend error: ${res.status} ${txt}`);
       }
       // Optional: toast success
+      const data = await res.json();
       console.log("Submitted:", payload);
+      console.log(data);
+
     } catch (err) {
       console.error(err);
-      // Optional: toast error
+      // Optional: handle error
+
+    } finally {
+      setIsLoading(true)
+      setIsJobQueued(true);
+      //setIsLoading(false);
+      thumbId = addLoadingThumb();
     }
   };
 
@@ -127,77 +154,79 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
       style={{
         width: "100%",
         maxWidth: MAX_W,
-        height: "100svh", // fill visible viewport (safe for iOS)
-        margin: "0 auto", // center horizontally
-        boxSizing: "border-box", // padding included in width
+        height: "100svh",
+        margin: "0 auto",
+        boxSizing: "border-box",
         padding: PREVIEW_PAD,
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        overflow: "hidden", // no horizontal scroll ever
-        gap: 180
+        gap: 12,
+        overflow: "hidden",
       }}
     >
       {contextHolder}
 
-      {/* IMAGE AREA */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          borderRadius: 8,
-          border: "1px solid var(--ant-color-border)",
-          background: "var(--ant-color-bg-container)",
-          maxWidth: "100%", // ensure image area shrinks with parent
-        }}
-      >
-        <img
-          src={previewUrl}
-          alt="Preview"
+      {/* LEFT: main preview + controls */}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* IMAGE AREA */}
+        <div
           style={{
-            width: "100%",
-            height: "100%",
-            maxHeight: "calc(100svh - 100px)", // ensure it fits between top and buttons
-            objectFit: "contain",
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+            borderRadius: 8,
+            border: "1px solid var(--ant-color-border)",
+            background: "var(--ant-color-bg-container)",
+            maxWidth: "100%",
           }}
-          draggable={false}
-        />
-      </div>
-
-      {/* BUTTON AREA */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 12,
-          marginTop: 16,
-          width: "100%",
-        }}
-      >
-        <Button icon={<ReloadOutlined />} onClick={onReset} block>
-          Choose another
-        </Button>
-        {/* <Button type="primary" block>Continue</Button> */}
-
-        {/* Submit JSON payload */}
-        <Button
-          icon={<CloudUploadOutlined />}
-          onClick={handleSubmit}
-          disabled={!previewUrl || doneFiles.length === 0}
-          block
         >
-          Submit selection
-        </Button>
 
-        <GenerateCard
-          fileList={galleryFiles}
-          onFileListChange={setGalleryFiles}
-        />
+          {isLoading ? (
+            <img
+              src="/assets/image-loader-light.gif"
+              alt="Loading"
+              style={{ width: "50%", border: "1px solid var(--ant-color-border)", borderRadius: 22, objectFit: "contain", verticalAlign: "middle" }} //height: 24, width: 24
+            />
+          ) : (
+            <img
+              src={previewUrl}
+              alt="Preview"
+              style={{ width: "100%", height: "100%", maxHeight: "calc(100svh - 100px)", objectFit: "contain" }}
+              draggable={false}
+            />
+          )}
 
+        </div>
+
+        {/* BUTTONS + GENERATE CARD */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", gap: 12 }}>
+            <Button
+              icon={!isLoading ? <SendOutlined /> : undefined}
+              onClick={handleSubmit}
+              disabled={isLoading} //!previewUrl || doneFiles.length === 0 || 
+              block
+            //style={{ height: 48 }}
+            >
+              Generate
+            </Button>
+
+            <Button icon={<ReloadOutlined />} onClick={onReset} block disabled={isLoading}>
+              Choose another
+            </Button>
+          </div>
+
+          <GenerateCard fileList={galleryFiles} onFileListChange={setGalleryFiles} />
+        </div>
       </div>
+
+      {/* RIGHT: thumbnail rail */}
+      <ThumbnailRail
+        items={thumbnails}
+        width={88}
+        onClickThumb={(id) => console.log("thumb clicked:", id)}
+      />
     </div>
   );
 };

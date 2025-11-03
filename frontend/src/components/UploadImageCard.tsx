@@ -6,6 +6,7 @@ import { ReloadOutlined } from "@ant-design/icons";
 import ContentCenter from './ContentCenter';
 import CustomUpload from './CustomUpload';
 import PreviewPanel from "./PreviewPanel";
+import { BACKEND_URL } from "../config";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -35,10 +36,21 @@ const UploadImageCard: React.FC = () => {
     };
 
 
-    const handleSuccess = (resp: any, file: File) => {
+    const handleSuccess = (resp: any) => {
 
-        // If backend returns { url: "/uploads/xxx.png" }
-        const url = resp?.url ? `http://localhost:8080${resp.url}` : previewUrl;
+
+        let url = previewUrl; // default fallback
+        if (resp?.url) {
+            if (resp.url.startsWith("http")) {
+                // full CDN URL
+                url = resp.url;
+            } else {
+                // local server-relative path
+                url = `{BACKEND_URL}${resp.url}`;
+            }
+        }
+
+
         setServerUrl(url || null);
         openNotificationWithIcon("success", "Upload complete", "");
         // At this point previewUrl is already set (local object URL).
@@ -128,6 +140,7 @@ const UploadImageCard: React.FC = () => {
                                 maxHeight: "100%",
                                 objectFit: "contain",
                                 userSelect: "none",
+                                borderRadius: 22
                             }}
                         />
                     </div>
@@ -139,7 +152,7 @@ const UploadImageCard: React.FC = () => {
                 </Flex>
 
                 <CustomUpload
-                    action="http://localhost:8080/upload_image_to_dir"
+                    action={`${BACKEND_URL}/upload_image_to_gcs_signed`}
                     name="file"
                     accept="image/*"
                     maxSizeMB={20}
