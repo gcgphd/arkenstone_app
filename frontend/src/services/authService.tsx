@@ -1,9 +1,10 @@
-const API_BASE_URL = "http://127.0.0.1:8080"
+import { BACKEND_URL } from "../config";
+
 
 export const login = async (email: string, password: string) => {
     const response = await fetch(
         //`${import.meta.env.VITE_API_BASE_URL}/auth/login`,
-        `${API_BASE_URL}/signin`,
+        `${BACKEND_URL}/signin`,
         {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -24,7 +25,7 @@ export const login = async (email: string, password: string) => {
 export const logout = async () => {
     const response = await fetch(
         //`${import.meta.env.VITE_API_BASE_URL}/auth/login`,
-        `${API_BASE_URL}/signout`,
+        `${BACKEND_URL}/signout`,
         {
             method: "GET",
             headers: { "Content-Type": "application/json" },

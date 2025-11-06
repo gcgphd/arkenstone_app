@@ -11,7 +11,6 @@ const MyProtectedComponent: React.FC = () => {
 
     const [api, contextHolder] = notification.useNotification();
     const [loading, setLoading] = useState(true);
-    const [data, setData] = useState(null);
     const navigate = useNavigate();
 
     const openNotificationWithIcon = (type: NotificationType, title: string, message: string) => {
@@ -26,9 +25,10 @@ const MyProtectedComponent: React.FC = () => {
         const fetchData = async () => {
             try {
                 const data = await token();
+                localStorage.setItem("uid", data.uid);
                 //openNotificationWithIcon('success', 'Login successful!', '');
                 //setIsLoggedIn(true);
-                console.log(data);
+                console.log("Login Success");
                 setLoading(false);
             } catch (error: any) {
                 openNotificationWithIcon('error', 'Login error', error.message);
@@ -45,6 +45,7 @@ const MyProtectedComponent: React.FC = () => {
 
     return (
         <ContentCenter direction='vertical'>
+            {contextHolder}
             <UploadImageCard></UploadImageCard>
         </ContentCenter>
     );

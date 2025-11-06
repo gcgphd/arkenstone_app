@@ -1,8 +1,8 @@
-const API_BASE_URL = "http://127.0.0.1:8080"
+import { BACKEND_URL } from "../config";
 
 export const token = async () => {
     const response = await fetch(
-        `${API_BASE_URL}/api/validate-token`,
+        `${BACKEND_URL}/api/validate-token`,
         {
             method: "GET",
             headers: { "Content-Type": "application/json" },

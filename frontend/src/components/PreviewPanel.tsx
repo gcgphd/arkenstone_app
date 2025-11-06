@@ -5,12 +5,17 @@ import GenerateCard from "./GenerateCard";
 import ThumbnailRail, { ThumbItem } from "./ThumbnailRail"
 import { BACKEND_URL } from "../config";
 const { useBreakpoint } = Grid;
+import { useJobPolling } from "../services/useJobPolling";
+import { pollingHelpers } from "../services/pollingService";
+import { getUserJobs } from "../services/jobsService";
+
 
 interface PreviewPanelProps {
   previewUrl: string;
   onReset: () => void;
   contextHolder?: React.ReactNode;
   isMobile?: boolean;
+  userId?: string;
 }
 
 interface BackendPayload {
@@ -28,11 +33,49 @@ interface BackendPayload {
 }
 
 
+// helper: normalize response to an array of raw jobs
+const normalizeJobs = (raw: any): any[] => {
+  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw?.jobs)) return raw.jobs;
+  if (raw?.jobs && typeof raw.jobs === "object") return Object.values(raw.jobs);
+  if (raw && typeof raw === "object") return Object.values(raw);
+  return [];
+};
+
+// parse a single raw job -> ThumbItem (uses your extractBestImage)
+const jobToThumb = (j: any): ThumbItem => {
+  const id = j?.id ?? j?.job_id ?? j?.uuid ?? "";
+  const status = String(j?.status ?? "unknown").toLowerCase();
+  const best = pollingHelpers.extractBestImage(j);
+  return {
+    id,
+    src: best ? toAbsolute(best) ?? "" : "/assets/image-loader-light.gif",
+    alt:
+      status === "succeeded"
+        ? "Generation complete"
+        : pollingHelpers.isInProgress(status)
+          ? "Generating…"
+          : "Generation failed",
+    status:
+      status === "succeeded"
+        ? "ready"
+        : pollingHelpers.isInProgress(status)
+          ? "loading"
+          : "error",
+  };
+};
+
+
+const toAbsolute = (u?: string | null) =>
+  !u ? undefined : u.startsWith("http") ? u : `${BACKEND_URL}${u}`;
+
+
 const PreviewPanel: React.FC<PreviewPanelProps> = ({
   previewUrl,
   onReset,
   contextHolder,
   isMobile: forcedMobile,
+  userId
 }) => {
   const screens = useBreakpoint();
   const isMobile = forcedMobile ?? !screens.sm;
@@ -43,12 +86,24 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
   const [galleryFiles, setGalleryFiles] = React.useState<UploadFile<any>[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [isJobQueued, setIsJobQueued] = React.useState(false);
   const [thumbnails, setThumbnails] = React.useState<ThumbItem[]>([]);
 
 
+  const jobThumbRef = React.useRef<Map<string, string>>(new Map()); // jobId -> thumbId
+  const didInitRef = React.useRef(false);
+  const mountedRef = React.useRef(true);
+
+
+  // Get User Id from local storage.
+  // to upgrade with context
+  const activeUserId = React.useMemo(
+    () => userId ?? (typeof window !== "undefined" ? localStorage.getItem("uid") ?? undefined : undefined),
+    [userId]
+  );
+
+
   const addLoadingThumb = React.useCallback(() => {
-    const id = `tmp-${Date.now()}`;
+    const id = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     setThumbnails((prev) => [
       { id, src: "/assets/image-loader-light.gif", alt: "Generating…", status: "loading" },
       ...prev,
@@ -56,15 +111,15 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
     return id;
   }, []);
 
-  // Turn relative into absolute (adjust base to your backend origin)
-  const toAbsolute = (u?: string) =>
-    !u ? undefined : u.startsWith("http") ? u : `http://localhost:8080${u}`;
+  const updateThumb = React.useCallback((id: string, changes: Partial<ThumbItem>) => {
+    setThumbnails((prev) => prev.map((t) => (t.id === id ? { ...t, ...changes } : t)));
+  }, []);
+
 
   // Your existing URL resolver (kept, with absolute fallback)
   const resolveUrl = (f: UploadFile<any>) => {
     if (f.url) return toAbsolute(f.url);
-    const r =
-      typeof f.response === "string" ? JSON.parse(f.response) : f.response;
+    const r = typeof f.response === "string" ? JSON.parse(f.response) : f.response;
     if (r?.url) return toAbsolute(r.url);
     return undefined;
   };
@@ -116,12 +171,93 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
     [previewUrl, doneFiles]
   );
 
+  // --- use the shared polling service via a hook
+  const { startPolling /*, stopPolling, stopAllPolling*/ } = useJobPolling(
+    React.useCallback(({ jobId, status, data }) => {
+      const thumbId = jobThumbRef.current.get(jobId);
+      if (!thumbId) return;
+
+      if (status === "succeeded") {
+        const img = toAbsolute(data?._bestImage) || "/assets/check-circle.svg";
+        updateThumb(thumbId, { src: img, alt: "Generation complete", status: "ready" });
+        jobThumbRef.current.delete(jobId);
+      } else if (status === "failed" || status === "canceled") {
+        updateThumb(thumbId, { alt: "Generation failed", status: "error" });
+        jobThumbRef.current.delete(jobId);
+      } else if (pollingHelpers.isInProgress(status)) {
+        // optional: set a progress label/spinner if you want
+      }
+    }, [updateThumb])
+  );
+
+
+  //////////// This part is used to update the Thumbanail images 
+  // on first run
+
+  // keep startPolling in a ref so the init effect 
+  // doesn't re-run when its identity changes
+  const startPollingRef = React.useRef(startPolling);
+  React.useEffect(() => {
+    startPollingRef.current = startPolling;
+  }, [startPolling]);
+
+
+  // set true on real mount, false on unmount
+  React.useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+
+  React.useEffect(() => {
+    console.log("Init Gallery");
+    console.log("didInit before:", didInitRef.current, "activeUserId:", activeUserId);
+
+    if (didInitRef.current) return;
+    if (!activeUserId) return;
+
+    didInitRef.current = true; // lock
+
+    (async () => {
+      try {
+        const raw = await getUserJobs(activeUserId);
+        console.log("User Jobs", raw);
+
+        // 🔐 double-check mount right before updating state
+        if (!mountedRef.current) {
+          console.log("Skip update: unmounted");
+          return;
+        }
+
+        const jobs = normalizeJobs(raw);
+
+        // add logs to prove it runs
+        console.log("About to set thumbnails", jobs.length);
+
+        setThumbnails(jobs.map(jobToThumb));
+
+        jobs.forEach((j: any) => {
+          const id = j?.id ?? j?.job_id ?? j?.uuid;
+          const status = String(j?.status ?? "").toLowerCase();
+          if (id && pollingHelpers.isInProgress(status)) {
+            jobThumbRef.current.set(id, id);
+            startPollingRef.current(id);
+          }
+        });
+      } catch (e: unknown) {
+        if ((e as any)?.name !== "AbortError") console.error("Error loading jobs", e);
+      }
+    })();
+  }, [activeUserId]);
+
+
+
+  // ---- enqueue a new job; start its independent poller
   const handleSubmit = async () => {
-    let thumbId: string | null = null;
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      return
-      // 👈 add the loading GIF to the rail
       const res = await fetch(`${BACKEND_URL}/queue_generation_job`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -131,23 +267,23 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
         const txt = await res.text();
         throw new Error(`Backend error: ${res.status} ${txt}`);
       }
-      // Optional: toast success
-      const data = await res.json();
-      console.log("Submitted:", payload);
-      console.log(data);
+      // expected: { job_id, status: "queued", ok: true }
+      const data: any = await res.json();
+      const jobId = String(data?.job_id);
+      if (!jobId) throw new Error("Missing job_id in enqueue response");
 
+      // create a loading thumb for this job
+      const thumbId = addLoadingThumb();
+      jobThumbRef.current.set(jobId, thumbId);
+
+      // start polling for just this job
+      startPolling(jobId);
     } catch (err) {
       console.error(err);
-      // Optional: handle error
-
     } finally {
-      setIsLoading(true)
-      setIsJobQueued(true);
-      //setIsLoading(false);
-      thumbId = addLoadingThumb();
+      setIsLoading(false); // only covers the POST
     }
   };
-
 
   return (
     <div
