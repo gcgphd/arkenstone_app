@@ -111,14 +111,10 @@ def get_list(obj, key):
 # ----------------------------
 # collect_media endpoint
 # ----------------------------
-def collect_media(request):
+def collect_media(data):
     """
     Accepts the JSON payload built on the frontend and optionally triggers a Replicate job.
     """
-    data = request.get_json(silent=True)
-    if data is None:
-        raise Exception("invalid or missing JSON body")
-
     preview = data.get("preview")
     gallery = data.get("gallery")
 

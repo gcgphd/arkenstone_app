@@ -5,7 +5,7 @@ dress_prompt = (
     "Replace the clothing with the outfits from the other images. Do not overlay garments. Remove and replace any original clothing that conflicts so the new outfit is the only visible garment. "
     "Match the new garments precisely in color, fabric, material, texture, pattern, silhouette, and fit. "
     "Adjust only what is necessary for realism such as cloth drape, hemlines, occlusions, and contact shadows so the outfit integrates naturally. "
-    "Do not change the environment, hairstyle, makeup, accessories, or the subject’s posture."
+    "Do not change the environment, hairstyle, makeup, accessories, or the subject’s posture. Do not rotate or crop the image. Do not change aspect ratio. Do not crop the model body."
 )
 
 

@@ -20,12 +20,14 @@ const getBase64 = (file: FileType): Promise<string> =>
   });
 
 interface GenerateCardProps {
+  uId?: string;
   isMobile?: boolean;
   fileList: UploadFile[];                       // ✅ controlled
   onFileListChange: (list: UploadFile[]) => void; // ✅ bubble changes up
 }
 
 const GenerateCard: React.FC<GenerateCardProps> = ({
+  uId,
   isMobile: forcedMobile,
   fileList,
   onFileListChange,
@@ -88,6 +90,7 @@ const GenerateCard: React.FC<GenerateCardProps> = ({
           f.uid === file.uid ? { ...f, url: absolute, thumbUrl: absolute } : f
         );
       }
+      console.log(newList)
       onFileListChange(newList);
       return;
     }
@@ -166,7 +169,8 @@ const GenerateCard: React.FC<GenerateCardProps> = ({
       }}
     >
       <Upload
-        action={`${BACKEND_URL}/upload_image_to_gcs_signed`}
+        action={`${BACKEND_URL}/upload_image_to_gcs_signed_tmp`}
+        data={{ uid: uId }}
         listType="picture-card"
         fileList={fileList}
         onPreview={handlePreview}

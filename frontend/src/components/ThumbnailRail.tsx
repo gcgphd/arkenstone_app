@@ -5,15 +5,18 @@ export type ThumbItem = {
     src: string;           // thumbnail URL (your GIF or final image)
     alt?: string;
     status?: "loading" | "ready" | "error";
+    job_id?: string;            // optional if not always set
+    preview_url?: string;
+    gallery_urls?: string[];
 };
 
 type Props = {
-    items: ThumbItem[];
     width?: number;        // px
-    onClickThumb?: (id: string) => void;
+    thumbnails: ThumbItem[];
+    onClickThumb?: (thumb: ThumbItem) => void;
 };
 
-const ThumbnailRail: React.FC<Props> = ({ items, width = 88, onClickThumb }) => {
+const ThumbnailRail: React.FC<Props> = ({ thumbnails, width = 88, onClickThumb }) => {
     return (
         <div
             style={{
@@ -31,7 +34,7 @@ const ThumbnailRail: React.FC<Props> = ({ items, width = 88, onClickThumb }) => 
                 background: "var(--ant-color-bg-container)",
             }}
         >
-            {items.length === 0 ? (
+            {thumbnails.length === 0 ? (
                 <div
                     style={{
                         color: "var(--ant-color-text-tertiary)",
@@ -40,13 +43,11 @@ const ThumbnailRail: React.FC<Props> = ({ items, width = 88, onClickThumb }) => 
                         marginTop: 8,
                     }}
                 >
-                    No thumbnails yet
                 </div>
             ) : (
-                items.map((t) => (
+                thumbnails.map((t) => (
                     <div
                         key={t.id}
-                        onClick={() => onClickThumb?.(t.id)}
                         style={{
                             width: "100%",
                             aspectRatio: "1 / 1",
@@ -61,7 +62,8 @@ const ThumbnailRail: React.FC<Props> = ({ items, width = 88, onClickThumb }) => 
                     >
                         <img
                             src={t.src}
-                            alt={t.alt || ""}
+                            alt={t.alt}
+                            onClick={() => onClickThumb?.(t)}
                             style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             draggable={false}
                         />

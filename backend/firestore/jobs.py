@@ -72,8 +72,8 @@ def jobs_get_all(
     out: Dict[str, Any] = {}
     for d in docs:
         data = d.to_dict() or {}
-        if "id" not in data:
-            data["id"] = d.id
+        if "job_id" not in data:
+            data["job_id"] = d.id
         out[d.id] = data
 
     return out

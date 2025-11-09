@@ -20,7 +20,7 @@ export function useJobPolling(
     }, []);
 
     return {
-        startPolling: (jobId: string) => pollingService.start(jobId),
+        startPolling: (jobId: string, uId: string) => pollingService.start(jobId, uId),
         stopPolling: (jobId: string) => pollingService.stop(jobId),
         stopAllPolling: () => pollingService.stopAll(),
     };

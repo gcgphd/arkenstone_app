@@ -1,10 +1,11 @@
 // CustomUpload.tsx
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { Button, Progress, Typography } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { UploadOutlined, SendOutlined } from "@ant-design/icons";
 
 type CustomUploadProps = {
     action: string;
+    uid?: string;
     name?: string;
     accept?: string;
     maxSizeMB?: number;
@@ -22,6 +23,7 @@ const { Text } = Typography;
 
 const CustomUpload: React.FC<CustomUploadProps> = ({
     action,
+    uid,
     name = "file",
     accept = "image/*",
     maxSizeMB = 20,
@@ -34,6 +36,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
     withDrop = true,
     deferPreviewUntilSuccess = true,
 }) => {
+
     const inputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -69,6 +72,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
 
             const form = new FormData();
             form.append(name, file);
+            if (uid) form.append("uid", uid);
 
             setUploading(true);
             setProgress(0);
@@ -159,9 +163,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
                         opacity: uploading ? 0.6 : 1,
                     }}
                 >
-                    <Text type="secondary">
-                        {uploading ? "Uploading…" : "Drop an image here or click to select"}
-                    </Text>
+
                 </div>
             )}
 

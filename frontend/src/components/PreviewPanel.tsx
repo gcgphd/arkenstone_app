@@ -3,35 +3,25 @@ import { Button, Grid, UploadFile } from "antd";
 import { ReloadOutlined, SendOutlined } from "@ant-design/icons";
 import GenerateCard from "./GenerateCard";
 import ThumbnailRail, { ThumbItem } from "./ThumbnailRail"
+import GalleryModal from "./GalleryModal";
 import { BACKEND_URL } from "../config";
 const { useBreakpoint } = Grid;
 import { useJobPolling } from "../services/useJobPolling";
 import { pollingHelpers } from "../services/pollingService";
 import { getUserJobs } from "../services/jobsService";
+import { useAuth } from "../context/AuthContext";
+import { UploadAsset } from '../types/types';
+import { queue_generation_job } from "../services/jobsService";
 
 
 interface PreviewPanelProps {
   previewUrl: string;
+  initialAsset?: UploadAsset;
   onReset: () => void;
   contextHolder?: React.ReactNode;
   isMobile?: boolean;
   userId?: string;
 }
-
-interface BackendPayload {
-  preview: {
-    url: string; // the big preview image shown at the top
-  };
-  gallery: {
-    urls: string[];          // final, absolute URLs (server response or file.url)
-    previewUrls: string[];   // UI previews (thumbUrl or best fallback)
-    names: string[];
-    sizes: number[];         // bytes (0 if unknown)
-    mimeTypes: string[];     // best-effort from file.type
-    uids: string[];          // UploadFile uid
-  };
-}
-
 
 // helper: normalize response to an array of raw jobs
 const normalizeJobs = (raw: any): any[] => {
@@ -42,11 +32,19 @@ const normalizeJobs = (raw: any): any[] => {
   return [];
 };
 
-// parse a single raw job -> ThumbItem (uses your extractBestImage)
+
 const jobToThumb = (j: any): ThumbItem => {
   const id = j?.id ?? j?.job_id ?? j?.uuid ?? "";
   const status = String(j?.status ?? "unknown").toLowerCase();
+
+  const preview_url = j?.preview?.signed_url ?? undefined;
+  const gallery_urls = Array.isArray(j?.gallery)
+    ? j.gallery.map((g: any) => g?.signed_url).filter(Boolean)
+    : [];
+
+  // keep your existing best-image logic as the visible src
   const best = pollingHelpers.extractBestImage(j);
+
   return {
     id,
     src: best ? toAbsolute(best) ?? "" : "/assets/image-loader-light.gif",
@@ -62,6 +60,9 @@ const jobToThumb = (j: any): ThumbItem => {
         : pollingHelpers.isInProgress(status)
           ? "loading"
           : "error",
+    job_id: j?.job_id ?? id,
+    preview_url,
+    gallery_urls,
   };
 };
 
@@ -72,11 +73,14 @@ const toAbsolute = (u?: string | null) =>
 
 const PreviewPanel: React.FC<PreviewPanelProps> = ({
   previewUrl,
+  initialAsset,
   onReset,
   contextHolder,
-  isMobile: forcedMobile,
-  userId
+  isMobile: forcedMobile
 }) => {
+
+
+  const { auth } = useAuth();
   const screens = useBreakpoint();
   const isMobile = forcedMobile ?? !screens.sm;
 
@@ -94,13 +98,19 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   const mountedRef = React.useRef(true);
 
 
-  // Get User Id from local storage.
-  // to upgrade with context
-  const activeUserId = React.useMemo(
-    () => userId ?? (typeof window !== "undefined" ? localStorage.getItem("uid") ?? undefined : undefined),
-    [userId]
-  );
+  // Get User Id from app context orlocal storage.
+  const activeUserId = React.useMemo(() => {
+    // ✅ priority 1: uid from context
+    if (auth?.uid) return auth.uid;
 
+    // ✅ priority 2: fallback to localStorage (in rare cases, e.g. page reload before context restored)
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("uid");
+      return stored ?? undefined;
+    }
+
+    return undefined;
+  }, [auth?.uid]);
 
   const addLoadingThumb = React.useCallback(() => {
     const id = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -116,59 +126,10 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   }, []);
 
 
-  // Your existing URL resolver (kept, with absolute fallback)
-  const resolveUrl = (f: UploadFile<any>) => {
-    if (f.url) return toAbsolute(f.url);
-    const r = typeof f.response === "string" ? JSON.parse(f.response) : f.response;
-    if (r?.url) return toAbsolute(r.url);
-    return undefined;
-  };
-
-  // Try to get a preview (thumb) URL; fall back to url/response or even object URL if needed
-  const resolvePreviewUrl = (f: UploadFile<any>) => {
-    if (f.thumbUrl) return toAbsolute(f.thumbUrl);
-    const fromFinal = resolveUrl(f);
-    if (fromFinal) return fromFinal;
-    // As a last resort, attempt a local object URL (only during this session)
-    const fileObj = f.originFileObj as File | undefined;
-    if (fileObj) {
-      try {
-        return URL.createObjectURL(fileObj);
-      } catch {
-        /* ignore */
-      }
-    }
-    return undefined;
-  };
 
   const doneFiles = React.useMemo(
     () => galleryFiles.filter((f) => f.status === "done"),
     [galleryFiles]
-  );
-
-
-  // Build the full payload you’ll POST to your backend
-  const payload: BackendPayload = React.useMemo(
-    () => ({
-      preview: {
-        url: previewUrl,
-      },
-      gallery: {
-        urls: doneFiles.map((f) => resolveUrl(f) ?? "").filter(Boolean),
-        previewUrls: doneFiles
-          .map((f) => resolvePreviewUrl(f) ?? "")
-          .filter(Boolean),
-        names: doneFiles.map((f) => f.name ?? ""),
-        sizes: doneFiles.map(
-          (f) => (f.size as number | undefined) ?? f.originFileObj?.size ?? 0
-        ),
-        mimeTypes: doneFiles.map(
-          (f) => f.type ?? f.originFileObj?.type ?? ""
-        ),
-        uids: doneFiles.map((f) => f.uid),
-      },
-    }),
-    [previewUrl, doneFiles]
   );
 
   // --- use the shared polling service via a hook
@@ -179,11 +140,31 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
       if (status === "succeeded") {
         const img = toAbsolute(data?._bestImage) || "/assets/check-circle.svg";
-        updateThumb(thumbId, { src: img, alt: "Generation complete", status: "ready" });
+
+        // extract the same fields as above if present in the poll payload
+        const preview_url = data?.preview?.signed_url ?? undefined;
+        const gallery_urls = Array.isArray(data?.gallery)
+          ? data.gallery.map((g: any) => g?.signed_url).filter(Boolean)
+          : [];
+
+        console.log("data", data)
+        console.log("gallery urls", gallery_urls)
+
+        updateThumb(thumbId, {
+          src: img,
+          alt: "Generation complete",
+          status: "ready",
+          job_id: jobId,
+          preview_url,
+          gallery_urls,
+        });
+
         jobThumbRef.current.delete(jobId);
+
       } else if (status === "failed" || status === "canceled") {
-        updateThumb(thumbId, { alt: "Generation failed", status: "error" });
+        updateThumb(thumbId, { alt: "Generation failed", status: "error", job_id: jobId });
         jobThumbRef.current.delete(jobId);
+
       } else if (pollingHelpers.isInProgress(status)) {
         // optional: set a progress label/spinner if you want
       }
@@ -191,8 +172,9 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   );
 
 
-  //////////// This part is used to update the Thumbanail images 
-  // on first run
+
+  // ------- This part is used to update the Thumbanail images  on first run
+
 
   // keep startPolling in a ref so the init effect 
   // doesn't re-run when its identity changes
@@ -223,7 +205,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
     (async () => {
       try {
         const raw = await getUserJobs(activeUserId);
-        console.log("User Jobs", raw);
 
         // 🔐 double-check mount right before updating state
         if (!mountedRef.current) {
@@ -243,7 +224,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
           const status = String(j?.status ?? "").toLowerCase();
           if (id && pollingHelpers.isInProgress(status)) {
             jobThumbRef.current.set(id, id);
-            startPollingRef.current(id);
+            startPollingRef.current(id, activeUserId);
           }
         });
       } catch (e: unknown) {
@@ -255,20 +236,38 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
 
   // ---- enqueue a new job; start its independent poller
+
+  // handle for payload
+  const safeParse = (v: any) => {
+    if (typeof v !== "string") return v;
+    try { return JSON.parse(v); } catch { return undefined; }
+  };
+
+  // build the payload to send to enqueue job
+  const payload = React.useMemo(
+    () => ({
+      uid: activeUserId,
+      preview: initialAsset,
+      gallery: doneFiles.map(f => safeParse((f as any).response)).filter(Boolean),
+    }),
+    [activeUserId, initialAsset, doneFiles]
+  );
+
+  // submit the job
   const handleSubmit = async () => {
+
+    if (!activeUserId) {
+      console.error("No active user id");
+      return; // or show a message
+    }
+
     setIsLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/queue_generation_job`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`Backend error: ${res.status} ${txt}`);
-      }
+
+      // send the generation job
+      const data = await queue_generation_job(payload);
+
       // expected: { job_id, status: "queued", ok: true }
-      const data: any = await res.json();
       const jobId = String(data?.job_id);
       if (!jobId) throw new Error("Missing job_id in enqueue response");
 
@@ -276,14 +275,18 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
       const thumbId = addLoadingThumb();
       jobThumbRef.current.set(jobId, thumbId);
 
+      // attach job_id to that temp thumb now
+      updateThumb(thumbId, { job_id: jobId });
+
       // start polling for just this job
-      startPolling(jobId);
+      startPolling(jobId, activeUserId);
     } catch (err) {
       console.error(err);
     } finally {
       setIsLoading(false); // only covers the POST
     }
   };
+
 
   return (
     <div
@@ -353,16 +356,19 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
             </Button>
           </div>
 
-          <GenerateCard fileList={galleryFiles} onFileListChange={setGalleryFiles} />
+          <GenerateCard uId={activeUserId} fileList={galleryFiles} onFileListChange={setGalleryFiles} />
         </div>
       </div>
 
-      {/* RIGHT: thumbnail rail */}
+      <GalleryModal thumbnails={thumbnails} />
+
+      {/* RIGHT: thumbnail rail 
       <ThumbnailRail
         items={thumbnails}
         width={88}
         onClickThumb={(id) => console.log("thumb clicked:", id)}
       />
+      */}
     </div>
   );
 };

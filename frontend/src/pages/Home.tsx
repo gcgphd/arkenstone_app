@@ -4,11 +4,12 @@ import { notification } from 'antd';
 import { token } from "../services/protectService";
 import ContentCenter from "../components/ContentCenter";
 import UploadImageCard from '../components/UploadImageCard';
+import { useAuth } from "../context/AuthContext";
 
 type NotificationType = 'success' | 'info' | 'warning' | 'error';
 
 const MyProtectedComponent: React.FC = () => {
-
+    const { auth, setAuth } = useAuth();
     const [api, contextHolder] = notification.useNotification();
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
@@ -25,9 +26,8 @@ const MyProtectedComponent: React.FC = () => {
         const fetchData = async () => {
             try {
                 const data = await token();
-                localStorage.setItem("uid", data.uid);
-                //openNotificationWithIcon('success', 'Login successful!', '');
-                //setIsLoggedIn(true);
+                // store in global auth (this also persists to localStorage via your context)
+                setAuth({ uid: data.uid ?? null, email: data.email ?? null });
                 console.log("Login Success");
                 setLoading(false);
             } catch (error: any) {
@@ -42,6 +42,12 @@ const MyProtectedComponent: React.FC = () => {
 
 
     if (loading) return <div>Loading...</div>;
+
+    //guard if uid is still missing
+    if (!auth.uid) {
+        navigate("/login");
+        return null;
+    }
 
     return (
         <ContentCenter direction='vertical'>

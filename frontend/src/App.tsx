@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import './App.css';
 import { Layout, ConfigProvider, Grid, theme } from 'antd';
 import type { ThemeConfig } from 'antd';
+import { AuthProvider } from './context/AuthContext';
 
 const { Content, Sider, Header } = Layout;
 const { useBreakpoint } = Grid;
@@ -26,88 +27,90 @@ function App() {
   const isMobile = !screens.md; // true under md breakpoint
 
   return (
-    <ConfigProvider theme={config}>
-      <Router>
-        <Layout
-          style={{
-            height: "100dvh",
-            padding: 0,
-            margin: 0,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
-        >
-          {/* ✅ Header only on mobile */}
-          {isMobile && (
-            <Header
-              style={{
-                position: "sticky",
-                top: 0,
-                zIndex: 10,
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                background: "#131313",
-              }}
-            />
-          )}
-
+    <AuthProvider>
+      <ConfigProvider theme={config}>
+        <Router>
           <Layout
             style={{
-              flex: 1,
-              minHeight: 0,
-              flexDirection: "row",
+              height: "100dvh",
+              padding: 0,
+              margin: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
             }}
           >
-            {/* ✅ Sider always visible on desktop, hidden on mobile (no scrollbars) */}
-            {!isMobile && (
-              <Sider
-                width={260}
+            {/* ✅ Header only on mobile */}
+            {isMobile && (
+              <Header
                 style={{
-                  height: "100%",
-                  minHeight: 0,
-                  overflow: "hidden", // ✅ no scrollbar
+                  position: "sticky",
                   top: 0,
-                  left: 0,
+                  zIndex: 10,
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  background: "#131313",
                 }}
-              >
-                <CustomMenu />
-              </Sider>
+              />
             )}
 
-            <Content
+            <Layout
               style={{
-                margin: 0,
-                height: "100%",
+                flex: 1,
                 minHeight: 0,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                padding: 0,
-                overflow: "auto", // ✅ only content scrolls if needed
+                flexDirection: "row",
               }}
             >
-              <div
+              {/* ✅ Sider always visible on desktop, hidden on mobile (no scrollbars) */}
+              {!isMobile && (
+                <Sider
+                  width={260}
+                  style={{
+                    height: "100%",
+                    minHeight: 0,
+                    overflow: "hidden", // ✅ no scrollbar
+                    top: 0,
+                    left: 0,
+                  }}
+                >
+                  <CustomMenu />
+                </Sider>
+              )}
+
+              <Content
                 style={{
-                  width: "100%",
+                  margin: 0,
                   height: "100%",
                   minHeight: 0,
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  padding: 0,
+                  overflow: "auto", // ✅ only content scrolls if needed
                 }}
               >
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/login" element={<Login />} />
-                </Routes>
-              </div>
-            </Content>
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    minHeight: 0,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/login" element={<Login />} />
+                  </Routes>
+                </div>
+              </Content>
+            </Layout>
           </Layout>
-        </Layout>
-      </Router>
-    </ConfigProvider>
+        </Router>
+      </ConfigProvider>
+    </AuthProvider>
   );
 }
 

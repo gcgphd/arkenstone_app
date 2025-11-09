@@ -1,61 +1,57 @@
 import React, { useState } from 'react';
-import { useNavigate } from "react-router-dom";
-import { Card, Typography, notification } from 'antd';
-import { Button, Flex, Grid } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import { Card, Typography, notification, Button } from 'antd';
+import { SendOutlined } from "@ant-design/icons";
+import { Flex, Grid } from "antd";
 import ContentCenter from './ContentCenter';
 import CustomUpload from './CustomUpload';
-import PreviewPanel from "./PreviewPanel";
+import GenerateModelCard from './GenerateModelCard';
 import { BACKEND_URL } from "../config";
+import { useAuth } from "../context/AuthContext";
+import { UploadAsset } from '../types/types';
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
 
+const PLACEHOLDER_SRC = "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
+
 type NotificationType = 'success' | 'info' | 'warning' | 'error';
 
-
 const UploadImageCard: React.FC = () => {
+    const authCtx = useAuth();
+    const uid = authCtx?.auth?.uid;
 
     const [api, contextHolder] = notification.useNotification();
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null); // 👈 controls visibility
-    const [serverUrl, setServerUrl] = useState<string | null>(null);   // final URL from backend
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [modelUrl, setModelUrl] = useState<string | null>(null);
+    const [serverAsset, setServerAsset] = useState<UploadAsset | null>(null);
 
-    const navigate = useNavigate();
+    // ✅ rename to setDoneUploading to match state
+    const [doneUploading, setDoneUploading] = React.useState(false);
+
     const screens = useBreakpoint();
-    const isMobile = !screens.sm; // < sm
+    const isMobile = !screens.sm;
 
-    const CARD_W = isMobile ? "min(92vw, 420px)" : 420; // shrink on phones
-    const CARD_H = isMobile ? "auto" : "60vh";          // avoid tall overflow on phones
+    const CARD_W = isMobile ? "min(92vw, 420px)" : 420;
+    const CARD_H = isMobile ? "auto" : "60vh";
     const CARD_PAD = isMobile ? 16 : 40;
 
     const openNotificationWithIcon = (type: NotificationType, title: string, message: string) => {
-        api[type]({
-            message: title,
-            description: message
-        });
+        api[type]({ message: title, description: message });
     };
 
-
     const handleSuccess = (resp: any) => {
+        setServerAsset(resp as UploadAsset);
 
-
-        let url = previewUrl; // default fallback
+        let url = previewUrl;
         if (resp?.url) {
-            if (resp.url.startsWith("http")) {
-                // full CDN URL
-                url = resp.url;
-            } else {
-                // local server-relative path
-                url = `{BACKEND_URL}${resp.url}`;
-            }
+            url = resp.url.startsWith("http") ? resp.url : `${BACKEND_URL}${resp.url}`;
+        }
+        if (url) {
+            setPreviewUrl(url);
+            setDoneUploading(true); // ✅ show the SimpleCard after upload completes
         }
 
-
-        setServerUrl(url || null);
         openNotificationWithIcon("success", "Upload complete", "");
-        // At this point previewUrl is already set (local object URL).
-        // If you prefer to switch to the server URL for preview:
-        if (url) setPreviewUrl(url);
     };
 
     const handleError = (err: any) => {
@@ -63,42 +59,37 @@ const UploadImageCard: React.FC = () => {
     };
 
     const handleLocalPreview = (url: string) => {
-        setPreviewUrl(url); // show instantly
-    };
-
-    const reset = () => {
-        setPreviewUrl(null);
-        setServerUrl(null);
+        setPreviewUrl(url);
     };
 
     const beforeUpload = (file: File) => {
-        // extra client validation if needed
         const isLt20M = file.size / 1024 / 1024 < 20;
         if (!isLt20M) openNotificationWithIcon("error", "Max 20MB file size is allowed", '');
         return isLt20M;
     };
 
-    // If we have a preview, hide the upload card and show the image preview panel
-    if (previewUrl) {
+    // ✅ When doneUploading is true, show the SimpleCard and hide the upload card
+    if (doneUploading) {
         return (
-            <PreviewPanel
-                previewUrl={previewUrl}
-                onReset={reset}
-                contextHolder={contextHolder}
-                isMobile={isMobile}
+            <GenerateModelCard
+                uid={uid}
+                // Show the uploaded image first, then loader, then result (SimpleCard handles this)
+                previewUrl={previewUrl ?? undefined}
+                title="YOURSELF HERE"
+                subtitle="Take a picture of yourself or upload it."
+                actionLabel="Generate"
             />
         );
     }
 
+    // Default: show the upload card with CustomUpload
     return (
-
-
         <Card
             hoverable
             style={{
                 width: CARD_W,
                 maxWidth: 420,
-                minWidth: 0,                   // allow shrinking in flex parents
+                minWidth: 0,
                 height: CARD_H,
                 flex: isMobile ? "0 1 auto" : "0 0 420px",
                 display: "flex",
@@ -109,10 +100,9 @@ const UploadImageCard: React.FC = () => {
                 body: {
                     flex: 1,
                     display: "flex",
-                    overflow: isMobile ? "auto" : "hidden", // scroll if needed on phones
+                    overflow: isMobile ? "auto" : "hidden",
                     padding: 16,
                     minHeight: 0,
-
                 },
             }}
         >
@@ -122,8 +112,8 @@ const UploadImageCard: React.FC = () => {
                 <Flex vertical align="center" gap={8} style={{ width: "100%", flex: 1, minHeight: 0 }}>
                     <div
                         style={{
-                            flex: 1,                           // image area grows
-                            minHeight: 0,                      // allow child to shrink
+                            flex: 1,
+                            minHeight: 0,
                             width: "100%",
                             display: "flex",
                             alignItems: "center",
@@ -134,7 +124,7 @@ const UploadImageCard: React.FC = () => {
                         <img
                             draggable={false}
                             alt="example"
-                            src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
+                            src={previewUrl ? previewUrl : PLACEHOLDER_SRC}
                             style={{
                                 maxWidth: "100%",
                                 maxHeight: "100%",
@@ -152,7 +142,8 @@ const UploadImageCard: React.FC = () => {
                 </Flex>
 
                 <CustomUpload
-                    action={`${BACKEND_URL}/upload_image_to_gcs_signed`}
+                    action={`${BACKEND_URL}/upload_image_to_gcs_signed_tmp`}
+                    uid={uid ?? undefined}
                     name="file"
                     accept="image/*"
                     maxSizeMB={20}
@@ -166,8 +157,8 @@ const UploadImageCard: React.FC = () => {
                 />
             </ContentCenter>
         </Card>
-
     );
-}
+};
 
 export default UploadImageCard;
+

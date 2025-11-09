@@ -7,8 +7,8 @@ type Listener = (evt: { jobId: string; status: string; data: any }) => void;
 const JOB_STATUS_PATH = "/job_status";
 
 // --- helpers (no heavy interfaces)
-const buildJobStatusUrl = (jobId: string) =>
-    `${BACKEND_URL}${JOB_STATUS_PATH}?job_id=${encodeURIComponent(jobId)}`;
+const buildJobStatusUrl = (jobId: string, uId: string) =>
+    `${BACKEND_URL}${JOB_STATUS_PATH}?job_id=${encodeURIComponent(jobId)}&uid=${encodeURIComponent(uId)}`;
 
 const getStatus = (js: any) => String(js?.status ?? "").toLowerCase();
 
@@ -16,14 +16,19 @@ const isInProgress = (s: string) =>
     s === "created" || s === "queued" || s === "starting" || s === "processing" || s === "running";
 
 const extractBestImage = (js: any): string | undefined => {
-    const fromResults = js?.results?.items?.[0]?.urls?.[0];
+    // const fromResults = js?.results?.items?.[0]?.urls?.[0];
+    // if (fromResults) return fromResults;
+    // const fromPreviewAbs = js?.gallery?.items?.[0]?.previewUrl?.absolute;
+    // if (fromPreviewAbs) return fromPreviewAbs;
+    // const fromUrlAbs = js?.gallery?.items?.[0]?.url?.absolute;
+    // if (fromUrlAbs) return fromUrlAbs;
+    // const fromPreviewField = js?.preview?.url?.absolute;
+    // if (fromPreviewField) return fromPreviewField;
+    // return undefined;
+    const fromResults = js?.results?.[0]?.signed_url;
     if (fromResults) return fromResults;
-    const fromPreviewAbs = js?.gallery?.items?.[0]?.previewUrl?.absolute;
-    if (fromPreviewAbs) return fromPreviewAbs;
-    const fromUrlAbs = js?.gallery?.items?.[0]?.url?.absolute;
+    const fromUrlAbs = js?.results?.[0]?.url;
     if (fromUrlAbs) return fromUrlAbs;
-    const fromPreviewField = js?.preview?.url?.absolute;
-    if (fromPreviewField) return fromPreviewField;
     return undefined;
 };
 
@@ -40,8 +45,9 @@ class PollingService {
         for (const fn of this.listeners) fn({ jobId, status, data });
     }
 
-    start(jobId: string) {
+    start(jobId: string, uId: string) {
         if (!jobId || this.polls.has(jobId)) return;
+        if (!uId) return;
 
         const handle: PollHandle = { abort: new AbortController(), timerId: null, delay: 1500 };
         this.polls.set(jobId, handle);
@@ -50,7 +56,7 @@ class PollingService {
             const h = this.polls.get(jobId);
             if (!h) return;
             try {
-                const resp = await fetch(buildJobStatusUrl(jobId), { signal: h.abort.signal });
+                const resp = await fetch(buildJobStatusUrl(jobId, uId), { signal: h.abort.signal });
                 if (!resp.ok) throw new Error(`Status ${resp.status}`);
                 const js: any = await resp.json();
                 const status = getStatus(js);
