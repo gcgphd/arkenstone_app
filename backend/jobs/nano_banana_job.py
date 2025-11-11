@@ -66,7 +66,7 @@ def run_nano_banana_job(db, job_id: str, uid: str, media: dict, prompt: str):
 
 
 
-def run_sync_nano_banana_job(job_id: str, uid: str, media: dict, prompt: str):
+def run_sync_nano_banana_job(uid: str, media: dict, prompt: str):
        
     try:
         results = generate_nano_banana(

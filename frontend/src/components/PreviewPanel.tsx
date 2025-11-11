@@ -361,14 +361,6 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
       </div>
 
       <GalleryModal thumbnails={thumbnails} />
-
-      {/* RIGHT: thumbnail rail 
-      <ThumbnailRail
-        items={thumbnails}
-        width={88}
-        onClickThumb={(id) => console.log("thumb clicked:", id)}
-      />
-      */}
     </div>
   );
 };

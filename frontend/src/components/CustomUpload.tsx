@@ -170,11 +170,17 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
             {/* ✅ Primary, loading, disabled until upload completes */}
             <Button
                 icon={!uploading ? <UploadOutlined /> : undefined}
+                size="large"
                 iconPosition="end"
                 onClick={pickFile}
                 loading={uploading}
                 disabled={uploading}
                 block={block}
+                style={{
+                    borderRadius: 12,   // ✅ rounder corners
+                    fontSize: 12,       // ✅ smaller text (try 13 or 12 for even smaller)
+                    //height: 42,         // optional: adjust height to match proportions
+                }}
             >
                 {uploading ? "Loading" : buttonText}
             </Button>

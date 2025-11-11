@@ -4,7 +4,12 @@ from uuid import uuid4
 from datetime import datetime
 from flask import request, jsonify
 from app import app  # keep your existing import
-from jobs import run_nano_banana_job,run_sync_nano_banana_job
+from jobs import (
+    run_nano_banana_job,
+    run_sync_nano_banana_job,
+    run_gemini_nano_banana_job,
+    run_sync_gemini_nano_banana
+)
 from firestore import jobs_set,jobs_get,jobs_get_all,jobs_delete_all
 from queue_manager import enqueue
 from .collect_media import collect_media,_safe_upload_disk_path,_to_abs_url
@@ -147,7 +152,8 @@ def queue_generation_job_test():
     jobs_set(db, job_id= job_id, uid= uid, data= db_entry) 
     
     # start the job
-    enqueue(run_nano_banana_job, db=db, job_id=job_id, uid=uid, media=file_inputs, prompt=dress_prompt)
+    #enqueue(run_nano_banana_job, db=db, job_id=job_id, uid=uid, media=file_inputs, prompt=dress_prompt)
+    enqueue(run_gemini_nano_banana_job, db=db, job_id=job_id, uid=uid, media=file_inputs, prompt=dress_prompt)
 
     return jsonify({"ok": True, "job_id": job_id, "status": "running"}), 202
 
@@ -173,8 +179,10 @@ def send_generation_job():
         return jsonify({'error':'No Files To process'}),400
     
     # start the generation job
-    result = run_sync_nano_banana_job(job_id=job_id, uid=uid, media=file_inputs, prompt=background_prompt)
-    
+    #result = run_sync_nano_banana_job(uid=uid, media=file_inputs, prompt=background_prompt)
+    result = run_sync_gemini_nano_banana(uid=uid, media=file_inputs, prompt=background_prompt)
+
+
     if result.get("status") == "succeeded":
         return jsonify(result),200
     

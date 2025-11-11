@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import { Card, Typography, Button, notification, Grid } from "antd";
-import { SendOutlined } from "@ant-design/icons";
+import { Button, notification, Grid } from "antd";
+import { SendOutlined, ReloadOutlined } from "@ant-design/icons";
 import { send_generation_job } from "../services/jobsService";
 import { UploadAsset } from '../types/types';
 import PreviewPanel from "./PreviewPanel";
 const { useBreakpoint } = Grid;
 
-const { Title, Text } = Typography;
 
 interface GenerateModelCardProps {
     imageSrc?: string;            // ultimate fallback
@@ -16,6 +15,7 @@ interface GenerateModelCardProps {
     previewUrl?: string;          // shown first
     actionLabel?: string;
     loaderSrc?: string;           // optional custom loader
+    onResetAll?: () => void;
 }
 
 const GenerateModelCard: React.FC<GenerateModelCardProps> = ({
@@ -26,6 +26,7 @@ const GenerateModelCard: React.FC<GenerateModelCardProps> = ({
     previewUrl,
     actionLabel = "Generate",
     loaderSrc = "/assets/image-loader-light.gif",
+    onResetAll
 }) => {
     const screens = useBreakpoint();
     const isMobile = !screens.sm;
@@ -33,6 +34,16 @@ const GenerateModelCard: React.FC<GenerateModelCardProps> = ({
     const [isGenerating, setIsGenerating] = useState(false);
     const [modelUrl, setModelUrl] = useState<string | null>(null);
     const [modelAsset, setModelAsset] = useState<UploadAsset | null>(null);
+
+
+    const handleReset = React.useCallback(() => {
+        // clear local state
+        setModelUrl(null);
+        setIsGenerating(false);
+        setModelAsset(null);
+        // now tell the parent to go back to upload view
+        onResetAll?.();
+    }, [onResetAll]);
 
     const handleGenerationSubmit = async () => {
         if (!uid) return console.error("No active user id");
@@ -78,7 +89,6 @@ const GenerateModelCard: React.FC<GenerateModelCardProps> = ({
         }
     };
 
-    const reset = () => { setModelUrl(null); setIsGenerating(false); };
 
     // decide what to show
     const displayedSrc = isGenerating
@@ -92,7 +102,7 @@ const GenerateModelCard: React.FC<GenerateModelCardProps> = ({
             <PreviewPanel
                 previewUrl={modelUrl}
                 initialAsset={modelAsset ?? undefined}
-                onReset={reset}
+                onReset={handleReset}
                 contextHolder={contextHolder}
                 isMobile={isMobile}
             />);
@@ -100,47 +110,95 @@ const GenerateModelCard: React.FC<GenerateModelCardProps> = ({
 
 
     return (
-        <Card
-            hoverable
-            style={{
-                width: 360,
-                borderRadius: 16,
+
+
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 16, maxHeight: "80vh" }}>
+
+            {/* BUTTONS + GENERATE CARD */}
+            <div style={{
                 display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
-                padding: 16,
-            }}
-        >
-            <img
-                draggable={false}
-                alt={isGenerating ? "Generating…" : "Preview"}
-                src={displayedSrc}
+                alignItems: "center",       // vertical center
+                justifyContent: "center",   // horizontal center
+                gap: 12,
+                maxWidth: "50%",
+                margin: "0 auto",           // optional: centers the div itself inside its parent
+            }}>
+                <Button
+                    icon={!isGenerating ? <SendOutlined /> : undefined}
+                    iconPosition="end"
+                    onClick={handleGenerationSubmit}
+                    loading={isGenerating}
+                    disabled={isGenerating || !uid || !previewUrl}
+                    block
+                    size="large"
+                    style={{
+                        borderRadius: 12,   // ✅ rounder corners
+                        fontSize: 12,       // ✅ smaller text (try 13 or 12 for even smaller)
+                        //height: 42,         // optional: adjust height to match proportions
+                    }}
+                //style={{ marginTop: 16 }}
+                >
+                    {isGenerating ? "Generating ..." : actionLabel}
+                </Button>
+
+                <Button
+                    icon={<ReloadOutlined />}
+                    onClick={handleReset}
+                    block
+                    disabled={isGenerating}
+                    size="large"
+                    style={{
+                        borderRadius: 12,   // ✅ rounder corners
+                        fontSize: 12,       // ✅ smaller text (try 13 or 12 for even smaller)
+                        //height: 42,         // optional: adjust height to match proportions
+                    }}
+                >
+                    Choose another
+                </Button>
+            </div>
+
+            {/* IMAGE AREA */}
+            <div
                 style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden",
+                    //borderRadius: 8,
+                    padding: 20,
+                    border: "1px solid var(--ant-color-border)",
+                    background: "var(--ant-color-bg-container)",
                     maxWidth: "100%",
-                    height: 220,
-                    objectFit: "contain",
-                    borderRadius: 12,
-                    marginBottom: 16,
-                    border: isGenerating ? "1px solid var(--ant-color-border)" : undefined,
                 }}
-            />
-
-            <Title level={3}>{title}</Title>
-            <Text type="secondary">{subtitle}</Text>
-
-            <Button
-                icon={!isGenerating ? <SendOutlined /> : undefined}
-                iconPosition="end"
-                onClick={handleGenerationSubmit}
-                loading={isGenerating}
-                disabled={isGenerating || !uid || !previewUrl}
-                block
-                style={{ marginTop: 16 }}
             >
-                {isGenerating ? "Generating ..." : actionLabel}
-            </Button>
-        </Card>
+
+                {isGenerating ? (
+                    <img
+                        src="/assets/image-loader-light.gif"
+                        alt="Generating ..."
+                        style={{
+                            width: "50%",
+                            border: "1px solid var(--ant-color-border)",
+                            borderRadius: 22,
+                            objectFit: "contain",
+                            verticalAlign: "middle"
+                        }} //height: 24, width: 24
+                    />
+                ) : (
+                    <img
+                        src={displayedSrc}
+                        alt="Preview"
+                        style={{ width: "100%", height: "100%", maxHeight: "calc(100svh - 100px)", objectFit: "contain", borderRadius: 22 }}
+                        draggable={false}
+                    />
+                )}
+
+            </div>
+        </div>
+
+
+
     );
 };
 

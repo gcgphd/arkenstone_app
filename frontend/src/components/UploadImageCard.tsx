@@ -12,7 +12,7 @@ import { UploadAsset } from '../types/types';
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
 
-const PLACEHOLDER_SRC = "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
+const PLACEHOLDER_SRC = "/assets/photo_guide.png"//"https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
 
 type NotificationType = 'success' | 'info' | 'warning' | 'error';
 
@@ -32,12 +32,22 @@ const UploadImageCard: React.FC = () => {
     const isMobile = !screens.sm;
 
     const CARD_W = isMobile ? "min(92vw, 420px)" : 420;
-    const CARD_H = isMobile ? "auto" : "60vh";
-    const CARD_PAD = isMobile ? 16 : 40;
+    const CARD_H = isMobile ? "80vh" : "80vh"; //
+    const CARD_PAD = isMobile ? 20 : 20;
 
     const openNotificationWithIcon = (type: NotificationType, title: string, message: string) => {
         api[type]({ message: title, description: message });
     };
+
+    // This will reset all from the Preview Panel
+    // In Generate Model Card.
+    const handleTopReset = React.useCallback(() => {
+        setDoneUploading(false);
+        setPreviewUrl(null);
+        setServerAsset(null);
+        // (modelUrl is in GenerateModelCard, so it will clear itself)
+    }, []);
+
 
     const handleSuccess = (resp: any) => {
         setServerAsset(resp as UploadAsset);
@@ -78,6 +88,7 @@ const UploadImageCard: React.FC = () => {
                 title="YOURSELF HERE"
                 subtitle="Take a picture of yourself or upload it."
                 actionLabel="Generate"
+                onResetAll={handleTopReset}
             />
         );
     }
@@ -94,14 +105,17 @@ const UploadImageCard: React.FC = () => {
                 flex: isMobile ? "0 1 auto" : "0 0 420px",
                 display: "flex",
                 flexDirection: "column",
-                padding: CARD_PAD,
+                borderRadius: 20,
+                padding: 0,
+                backgroundColor: "transparent", // transparent background
+                border: "2px dashed rgba(255, 255, 255, 0.3)", // dashed border with light opacity
             }}
             styles={{
                 body: {
                     flex: 1,
                     display: "flex",
                     overflow: isMobile ? "auto" : "hidden",
-                    padding: 16,
+                    padding: CARD_PAD,
                     minHeight: 0,
                 },
             }}
@@ -128,33 +142,40 @@ const UploadImageCard: React.FC = () => {
                             style={{
                                 maxWidth: "100%",
                                 maxHeight: "100%",
-                                objectFit: "contain",
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
                                 userSelect: "none",
-                                borderRadius: 22
+                                borderRadius: 22,
+                                border: "px solid white",
+                                boxSizing: "border-box",
                             }}
                         />
                     </div>
 
-                    <div>
-                        <Title level={2}>YOURSELF HERE</Title>
-                        <Text type="secondary"> Take a picture of yourself or upload it.</Text>
+                    <div style={{ width: "100%", textAlign: "center" }}>
+                        <Title level={3}>YOURSELF HERE</Title>
+                        <Text type="secondary">Take a picture of yourself or upload it.</Text>
                     </div>
+
+                    <CustomUpload
+                        action={`${BACKEND_URL}/upload_image_to_gcs_signed_tmp`}
+                        uid={uid ?? undefined}
+                        name="file"
+                        accept="image/*"
+                        maxSizeMB={20}
+                        beforeUpload={beforeUpload}
+                        onLocalPreview={handleLocalPreview}
+                        onSuccess={handleSuccess}
+                        onError={handleError}
+                        buttonText="Upload Media"
+                        block
+                        withDrop
+                    />
+
                 </Flex>
 
-                <CustomUpload
-                    action={`${BACKEND_URL}/upload_image_to_gcs_signed_tmp`}
-                    uid={uid ?? undefined}
-                    name="file"
-                    accept="image/*"
-                    maxSizeMB={20}
-                    beforeUpload={beforeUpload}
-                    onLocalPreview={handleLocalPreview}
-                    onSuccess={handleSuccess}
-                    onError={handleError}
-                    buttonText="Upload Media"
-                    block
-                    withDrop
-                />
+
             </ContentCenter>
         </Card>
     );

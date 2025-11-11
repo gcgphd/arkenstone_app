@@ -8,6 +8,7 @@ from flask_limiter.util import get_remote_address
 import firebase_admin
 from firebase_admin import firestore,credentials
 from google.cloud import storage
+from google import genai
 #from config import cred
 
 # load env variables
@@ -54,5 +55,7 @@ with app.app_context():
     fb = firebase_admin.initialize_app() 
     db = firestore.client()
     storage_client = storage.Client()
+    gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+
 
 from app import signin,token,upload_image,upload_image_cdn,generate_from_disk
