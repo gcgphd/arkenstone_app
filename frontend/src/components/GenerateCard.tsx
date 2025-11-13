@@ -139,7 +139,6 @@ const GenerateCard: React.FC<GenerateCardProps> = ({
         backgroundColor: "var(--ant-color-primary)",
       }}
     >
-      Upload
     </Button>
   );
 

@@ -58,4 +58,4 @@ with app.app_context():
     gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 
-from app import signin,token,upload_image,upload_image_cdn,generate_from_disk
+from app import signin,token,upload_image,upload_image_cdn,generate_from_disk,models

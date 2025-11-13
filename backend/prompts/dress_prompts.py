@@ -1,7 +1,7 @@
 #from langchain_core.prompts import PromptTemplate
 
 dress_prompt = (
-    "Use the last image as the base person and scene. Use the aspect ratio of the first image. Keep pose, facial expression, body proportions, background, camera angle, and lighting exactly the same. "
+    "Use [Image1] as the base person and scene. Use the aspect ratio of last image. Keep pose, facial expression, body proportions, background, camera angle, and lighting exactly the same. "
     "Replace the clothing with the outfits from the other images. Do not overlay garments. Remove and replace any original clothing that conflicts so the new outfit is the only visible garment. "
     "Match the new garments precisely in color, fabric, material, texture, pattern, silhouette, and fit. "
     "Adjust only what is necessary for realism such as cloth drape, hemlines, occlusions, and contact shadows so the outfit integrates naturally. "

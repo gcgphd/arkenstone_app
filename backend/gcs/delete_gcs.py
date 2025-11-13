@@ -2,23 +2,35 @@ import os
 
 GCS_BUCKET = os.environ["GCS_BUCKET"]
 
-def delete_gcs_folder(client, folder_path: str, bucket_name: str = GCS_BUCKET,) -> int:
+def delete_gcs_folder(
+    client,
+    folder_path: str,
+    bucket_name: str = GCS_BUCKET,
+) -> int:
     """
-    Delete all objects under a given GCS 'folder' (prefix).
+    Delete all objects under a given GCS 'folder' (prefix) and any placeholder
+    object that represents the folder itself.
     Returns the number of deleted objects.
-    Does nothing if the folder doesn't exist.
     """
-    # Normalize folder name (strip leading slashes, ensure trailing /)
-    folder_path = folder_path.strip("/").rstrip("/") + "/"
+
+    # Normalize
+    normalized = folder_path.strip("/").rstrip("/")      # e.g. "user/uid/jobs/jobid"
+    prefix = normalized + "/"                            # e.g. "user/uid/jobs/jobid/"
 
     bucket = client.bucket(bucket_name)
-    blobs = list(bucket.list_blobs(prefix=folder_path))
+
+    # 1) All children under prefix/
+    blobs = list(bucket.list_blobs(prefix=prefix))
+
+    # 2) Optional placeholder object without trailing slash: "user/uid/jobs/jobid"
+    folder_blob = bucket.blob(normalized)
+    if folder_blob.exists():
+        blobs.append(folder_blob)
 
     if not blobs:
-        print(f"⚪ No folder found at: gs://{bucket_name}/{folder_path}")
+        print(f"ℹ️ No objects found at: gs://{bucket_name}/{prefix}")
         return 0
 
-    # Bulk delete for efficiency
     bucket.delete_blobs(blobs)
-    print(f"🗑️ Deleted {len(blobs)} objects from gs://{bucket_name}/{folder_path}")
+    print(f"🗑️ Deleted {len(blobs)} objects for folder gs://{bucket_name}/{normalized}")
     return len(blobs)

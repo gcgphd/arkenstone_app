@@ -39,7 +39,7 @@ def get_signed_url(client, gcs_path: str, expires_hours: int = 24) -> dict:
         version="v4",
         expiration=timedelta(hours=expires_hours),
         method="GET",
-        response_disposition=f'inline; filename="{blob.name.split("/")[-1]}"'
+        response_disposition=f'attachment; filename="{blob.name.split("/")[-1]}"'
     )
 
     return {

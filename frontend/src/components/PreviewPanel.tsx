@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Grid, UploadFile } from "antd";
-import { ReloadOutlined, SendOutlined } from "@ant-design/icons";
+import { ReloadOutlined, SendOutlined, CloseOutlined } from "@ant-design/icons";
 import GenerateCard from "./GenerateCard";
 import ThumbnailRail, { ThumbItem } from "./ThumbnailRail"
 import GalleryModal from "./GalleryModal";
@@ -331,7 +331,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
             <img
               src={previewUrl}
               alt="Preview"
-              style={{ width: "100%", height: "100%", maxHeight: "calc(100svh - 100px)", objectFit: "contain" }}
+              style={{ width: "100%", height: "100%", maxHeight: "calc(100svh - 100px)", objectFit: "contain", borderRadius: 22 }}
               draggable={false}
             />
           )}
@@ -340,19 +340,48 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
         {/* BUTTONS + GENERATE CARD */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", gap: 12 }}>
+
+          <div style={{
+            display: "flex",
+            alignItems: "center",       // vertical center
+            justifyContent: "space-between",   // horizontal center
+            gap: 12,
+            width: "100%",
+            //maxWidth: "50%",
+            margin: "0 auto",           // optional: centers the div itself inside its parent
+          }}>
             <Button
               icon={!isLoading ? <SendOutlined /> : undefined}
+              iconPosition="end"
               onClick={handleSubmit}
-              disabled={isLoading} //!previewUrl || doneFiles.length === 0 || 
+              loading={isLoading}
+              disabled={isLoading || !activeUserId || !previewUrl}
               block
-            //style={{ height: 48 }}
+              size="large"
+              style={{
+                borderRadius: 12,   // ✅ rounder corners
+                fontSize: 12,       // ✅ smaller text (try 13 or 12 for even smaller)
+                width: "15%",
+                //height: 42,         // optional: adjust height to match proportions
+              }}
+            //style={{ marginTop: 16 }}
             >
-              Generate
+              {isLoading ? "Generating ..." : "Generate"}
             </Button>
 
-            <Button icon={<ReloadOutlined />} onClick={onReset} block disabled={isLoading}>
-              Choose another
+            <Button
+              icon={<CloseOutlined />}
+              onClick={onReset}
+              block
+              disabled={isLoading}
+              size="large"
+              style={{
+                borderRadius: 12,   // ✅ rounder corners
+                fontSize: 12,       // ✅ smaller text (try 13 or 12 for even smaller)
+                width: "5%"
+                //width: 63,         // optional: adjust height to match proportions
+              }}
+            >
             </Button>
           </div>
 
@@ -360,7 +389,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
         </div>
       </div>
 
-      <GalleryModal thumbnails={thumbnails} />
+      <GalleryModal thumbnails={thumbnails} gallery={false} />
     </div>
   );
 };

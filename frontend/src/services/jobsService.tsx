@@ -41,3 +41,31 @@ export const send_generation_job = async (payload: any) => {
     return await res.json();
 };
 
+
+
+export async function deleteJob(uid: string, jobId: string): Promise<void> {
+    const res = await fetch(`${BACKEND_URL}/api/delete_job`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            uid,
+            jobid: jobId, // must match Flask: data.get("jobid")
+        }),
+    });
+
+    let data: any = null;
+    try {
+        data = await res.json();
+    } catch {
+        // ignore JSON error, we'll fall back to generic message
+    }
+
+    if (!res.ok || data?.status === "fail") {
+        const msg =
+            data?.message || `Failed to delete job ${jobId}. HTTP ${res.status}`;
+        throw new Error(msg);
+    }
+}
+

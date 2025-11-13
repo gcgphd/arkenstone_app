@@ -83,7 +83,7 @@ def upload_image_to_gcs_signed_tmp():
         "filename": safe_name,
         "size": len(raw),
         "mimetype": f.mimetype,
-        "url": info["signed_url"],   # <— time-limited public link for preview
+        "url": info["signed_url"], 
         "thumbUrl": info["signed_url"],
         "gcs_path": info["gcs_path"],
         "cdn": "gcs-signed"

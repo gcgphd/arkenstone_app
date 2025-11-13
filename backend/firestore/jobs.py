@@ -82,6 +82,23 @@ def jobs_get_all(
 
 ##### Delete job functions
 
+
+def delete_job(db, job_id: str, uid : str):
+    """
+    Delete a job document from Firestore under a user's jobs subcollection.
+    """
+    
+    jobs_ref = (
+        db
+        .collection(COLLECTION)
+        .document(uid).collection("jobs")
+        .document(job_id)
+    )
+    jobs_ref.delete()
+
+    return
+
+
 def _chunks(seq: List[str], size: int) -> Iterable[List[str]]:
     for i in range(0, len(seq), size):
         yield seq[i:i+size]

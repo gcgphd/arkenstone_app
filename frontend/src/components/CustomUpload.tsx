@@ -1,7 +1,7 @@
 // CustomUpload.tsx
 import React, { useRef, useState, useCallback, useEffect } from "react";
-import { Button, Progress, Typography } from "antd";
-import { UploadOutlined, SendOutlined } from "@ant-design/icons";
+import { Button, Progress } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 
 type CustomUploadProps = {
     action: string;
@@ -19,7 +19,6 @@ type CustomUploadProps = {
     deferPreviewUntilSuccess?: boolean;
 };
 
-const { Text } = Typography;
 
 const CustomUpload: React.FC<CustomUploadProps> = ({
     action,
@@ -172,6 +171,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
                 icon={!uploading ? <UploadOutlined /> : undefined}
                 size="large"
                 iconPosition="end"
+                type="text"
                 onClick={pickFile}
                 loading={uploading}
                 disabled={uploading}

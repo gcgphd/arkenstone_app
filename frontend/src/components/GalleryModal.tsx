@@ -1,17 +1,25 @@
 import React from "react";
-import { Button, Modal, Spin, Grid, Image, Card, Radio, Tooltip, FloatButton } from "antd";
-import { DeleteOutlined, ShareAltOutlined, DownloadOutlined } from "@ant-design/icons";
+import { Button, Modal, Spin, Grid, Image, Card, message } from "antd";
+import { LoadingOutlined } from '@ant-design/icons';
 import ThumbnailRail, { ThumbItem } from "./ThumbnailRail";
+import ThumbnailGallery from "./ThumbnailGallery";
 import ActionButtonGroup from "./ActionButtons";
+import { downloadDirect, shareUrl } from "../services/shareService";
+import { deleteJob } from "../services/jobsService";
+import { useAuth } from "../context/AuthContext";
+import { useNotify } from "../context/NotificationContext";
 
 interface GalleryModalProps {
     thumbnails: ThumbItem[];
+    gallery: boolean;
 }
 
 const { useBreakpoint } = Grid;
 
-const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
+const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails, gallery }) => {
     const screens = useBreakpoint();
+    const { auth } = useAuth();
+    const notify = useNotify();
 
     const modalWidth = React.useMemo(() => {
         if (screens.xxl) return "60%";
@@ -26,6 +34,14 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
     const [loading, setLoading] = React.useState(false);
     const [selectedThumb, setSelectedThumb] = React.useState<ThumbItem | null>(null);
 
+    // Local copy so we can remove items after delete
+    const [items, setItems] = React.useState<ThumbItem[]>(thumbnails);
+
+    // Keep local state in sync if parent changes the thumbnails
+    React.useEffect(() => {
+        setItems(thumbnails);
+    }, [thumbnails]);
+
     const handleThumbClick = (thumb: ThumbItem) => {
         setSelectedThumb(thumb);
         setOpen(true);
@@ -38,48 +54,67 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
         setSelectedThumb(null);
     };
 
-    const handleDownload = async () => {
-        if (!selectedThumb?.src) return;
+    const getBestUrl = (thumb?: ThumbItem | null) =>
+        thumb?.src || thumb?.preview_url || thumb?.gallery_urls?.[0] || "";
+
+    const handleDownload = () => {
+        const url = getBestUrl(selectedThumb);
+        if (!url) return;
+        downloadDirect(url);
+    };
+
+    const handleShare = async () => {
+        const url = getBestUrl(selectedThumb);
+        if (!url) return;
+
+        await shareUrl(url, {
+            title: selectedThumb?.job_id
+                ? `Image ${selectedThumb.job_id}`
+                : "Shared image",
+            text: "Check out this image",
+            onSuccess: () => message.success("Shared successfully"),
+            onCopy: () => message.success("Link copied to clipboard"),
+            onOpenFallback: () => message.info("Opened in a new tab"),
+            onError: () => message.error("Share failed"),
+        });
+    };
+
+    const handleDelete = async () => {
+        if (!selectedThumb?.job_id) {
+            message.error("Missing job id for this thumbnail");
+            return;
+        }
+        if (!auth?.uid) {
+            message.error("User not authenticated");
+            return;
+        }
 
         try {
-            const response = await fetch(selectedThumb.src, { mode: "cors" });
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
+            setLoading(true);
 
-            const link = document.createElement("a");
-            link.href = blobUrl;
+            // Call backend
+            await deleteJob(auth.uid, selectedThumb.job_id);
 
-            // Optional: smarter filename
-            const filename =
-                selectedThumb.job_id ??
-                selectedThumb.src.split("/").pop()?.split("?")[0] ??
-                "download.jpg";
-            link.download = filename;
+            // Remove from local gallery
+            setItems((prev) =>
+                prev.filter((t) => t.job_id !== selectedThumb.job_id)
+            );
 
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Close modal and clear selection
+            setOpen(false);
+            setSelectedThumb(null);
 
-            // Cleanup
-            window.URL.revokeObjectURL(blobUrl);
-        } catch (error) {
-            console.error("Download failed:", error);
+            message.success("Generation deleted successfully");
+        } catch (err: any) {
+            console.error(err);
+            message.error(err?.message || "Failed to delete generation");
+        } finally {
+            setLoading(false);
         }
-    };
-
-    const handleDelete = () => {
-        console.log("Delete clicked");
-        // add your delete logic here
-    };
-
-    const handleShare = () => {
-        console.log("Share clicked");
-        // add your share logic here
     };
 
     return (
         <>
-            {/* CSS: make AntD <Image> thumbnails square and cover their box */}
             <style>{`
         .square-thumb {
           width: 100%;
@@ -93,12 +128,17 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
           object-fit: cover;
           display: block;
         }
-
-                
-
       `}</style>
 
-            <ThumbnailRail thumbnails={thumbnails} onClickThumb={handleThumbClick} />
+            {/* Use local items, not raw thumbnails */}
+            {gallery ? (
+                <ThumbnailGallery thumbnails={items} onClickThumb={handleThumbClick} />
+            ) : (
+                <ThumbnailRail
+                    thumbnails={items} onClickThumb={handleThumbClick}
+                />
+            )
+            }
 
             <Modal
                 open={open}
@@ -108,20 +148,20 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
                 style={{ top: 16 }}
                 styles={{
                     mask: {
-                        backgroundColor: "rgba(0, 0, 0, 0.3)",  // faint dark overlay behind everything
-                        backdropFilter: "blur(8px)",             // blur the page behind modal
+                        backgroundColor: "rgba(0, 0, 0, 0.3)",
+                        backdropFilter: "blur(8px)",
                     },
                     content: {
                         height: "90vh",
                         display: "flex",
                         flexDirection: "column",
-                        background: "rgba(255, 255, 255, 0)", // translucent white layer
-                        backdropFilter: "blur(18px)",            // strong internal blur
-                        WebkitBackdropFilter: "blur(18px)",      // Safari support
+                        background: "rgba(255, 255, 255, 0)",
+                        backdropFilter: "blur(18px)",
+                        WebkitBackdropFilter: "blur(18px)",
                         border: "1px solid rgba(255, 255, 255, 0)",
                         boxShadow: "0 8px 40px rgba(0, 0, 0, 0)",
                         borderRadius: 12,
-                        color: "white",                          // readable text on translucent bg
+                        color: "white",
                     },
                     header: {
                         background: "transparent",
@@ -154,11 +194,11 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
                             minHeight: 0,
                         }}
                     >
-                        <Spin size="large" />
+                        <Spin tip="Deleting" indicator={<LoadingOutlined spin />} />
                     </div>
                 ) : selectedThumb ? (
                     <>
-                        {/* MAIN IMAGE AREA (70%) */}
+                        {/* MAIN IMAGE */}
                         <div
                             style={{
                                 flex: 8,
@@ -179,6 +219,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
                                         maxHeight: "100%",
                                         objectFit: "contain",
                                         display: "block",
+                                        borderRadius: 22,
                                     }}
                                 />
                             ) : (
@@ -186,7 +227,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
                             )}
                         </div>
 
-                        {/* GALLERY CARD AREA (30%) */}
+                        {/* SIDE PANEL */}
                         <div
                             style={{
                                 flex: 2,
@@ -195,11 +236,11 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 width: "100%",
-                                minHeight: 0,                   // <— critical for this section
+                                minHeight: 0,
                                 gap: 12,
                             }}
                         >
-                            {/* --- ACTION BUTTONS (Radio Group) --- */}
+                            {/* ACTION BUTTONS */}
                             <div
                                 style={{
                                     width: "50%",
@@ -210,13 +251,12 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
                             >
                                 <ActionButtonGroup
                                     onDownload={handleDownload}
-                                    onDelete={() => console.log("Delete")}
-                                    onShare={() => console.log("Share")}
+                                    onDelete={handleDelete}
+                                    onShare={handleShare}
                                 />
                             </div>
 
-                            {/* --- GALLERY CARD --- */}
-
+                            {/* GALLERY CARD */}
                             <Card
                                 size="small"
                                 style={{
@@ -224,7 +264,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
                                     height: "100%",
                                     borderRadius: 12,
                                     display: "flex",
-                                    flex: 1,                        // <— fill leftover space
+                                    flex: 1,
                                     minHeight: 0,
                                     justifyContent: "center",
                                     alignItems: "center",
@@ -245,7 +285,6 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
                                     },
                                 }}
                             >
-                                {/* Preview image */}
                                 {selectedThumb?.preview_url && (
                                     <div
                                         style={{
@@ -264,7 +303,6 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
                                     </div>
                                 )}
 
-                                {/* Gallery images */}
                                 {selectedThumb?.gallery_urls?.length ? (
                                     selectedThumb.gallery_urls.map((url, i) => (
                                         <div
@@ -299,4 +337,5 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ thumbnails }) => {
 };
 
 export default GalleryModal;
+
 

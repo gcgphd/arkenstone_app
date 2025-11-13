@@ -10,11 +10,11 @@ from jobs import (
     run_gemini_nano_banana_job,
     run_sync_gemini_nano_banana
 )
-from firestore import jobs_set,jobs_get,jobs_get_all,jobs_delete_all
+from firestore import jobs_set,jobs_get,jobs_get_all,jobs_delete_all,delete_job
 from queue_manager import enqueue
 from .collect_media import collect_media,_safe_upload_disk_path,_to_abs_url
 from prompts import dress_prompt,background_prompt
-from gcs import get_signed_url,delete_gcs_folder,copy_blob_within_bucket
+from gcs import get_signed_url,delete_gcs_folder,copy_blob_within_bucket,delete_gcs_folder
 
 from app import db,storage_client
 
@@ -97,6 +97,7 @@ def prepare_job(data,jobid):
 
         # prepare the output for gallery
         file_inputs.append(gallery_item_url)
+        #file_inputs.reverse()
 
         gallery_out.append({
             'filename':gallery_item.get('filename'),
@@ -272,22 +273,6 @@ def job_status():
     
 
 
-ALLOWED_ORDER_FIELDS = {"created_at", "modified_at", "status"}  # adjust to your schema
-
-def _parse_bool(val, default):
-    if val is None:
-        return default
-    return val.strip().lower() in ("1", "true", "t", "yes", "y")
-
-def _parse_int(val):
-    if val is None or val == "":
-        return None
-    try:
-        return int(val)
-    except ValueError:
-        return None
-    
-
 def sign_job_images(jobs):
     '''
     Add a 'signed_url' key to all
@@ -307,6 +292,23 @@ def sign_job_images(jobs):
 
     return
 
+
+
+ALLOWED_ORDER_FIELDS = {"created_at", "modified_at", "status"}  # adjust to your schema
+
+def _parse_bool(val, default):
+    if val is None:
+        return default
+    return val.strip().lower() in ("1", "true", "t", "yes", "y")
+
+def _parse_int(val):
+    if val is None or val == "":
+        return None
+    try:
+        return int(val)
+    except ValueError:
+        return None
+    
 
 @app.route("/jobs", methods=["GET"])
 def get_all_jobs():
@@ -349,6 +351,41 @@ def get_all_jobs():
         print(e)
         return jsonify({"error": str(e)}), 500
 
+
+
+#### routes to delete jobs
+
+@app.route("/api/delete_job", methods=["POST"])
+def api_delete_job():
+    """
+    Deletes entries for job in both Firestore and 
+    Cloud Storage
+    """
+
+    # collect data
+    data = request.get_json(silent=True)
+    if data is None:
+        return jsonify({"error": "invalid or missing JSON body"}), 400
+    
+    # collect user id
+    uid = data.get('uid')
+    if uid is None:
+        return jsonify({"error": "Missing uid"}), 400
+    
+    # collect job id
+    jobid = data.get('jobid')
+    if jobid is None:
+        return jsonify({"error": "Missing jobid"}), 400
+    
+    # delete both firestore and gcs bucket
+    try:
+        delete_job(db=db,job_id=jobid,uid=uid)
+        delete_gcs_folder(client= storage_client, folder_path= f"user/{uid}/jobs/{jobid}")
+
+    except Exception as e:
+        return jsonify({"status":"fail","message": f"Could not delete entry {e}"}), 400
+    
+    return jsonify({"status":"success","message":"Correctly Delete Generation"}), 200
 
 
 @app.route("/jobs", methods=["DELETE"])

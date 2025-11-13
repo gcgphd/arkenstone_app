@@ -48,7 +48,7 @@ def upload_bytes_signed(
         version="v4",
         expiration=timedelta(hours=expires_hours),
         method="GET",
-        response_disposition=f'inline; filename="{filename}"'
+        response_disposition=f'attachment; filename="{filename}"'
     )
     return {
         "signed_url": signed_url,
