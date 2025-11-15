@@ -1,7 +1,7 @@
 // CustomUpload.tsx
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { Button, Progress } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { UploadOutlined, FolderAddOutlined } from "@ant-design/icons";
 
 type CustomUploadProps = {
     action: string;
@@ -17,6 +17,7 @@ type CustomUploadProps = {
     block?: boolean;
     withDrop?: boolean;
     deferPreviewUntilSuccess?: boolean;
+    onOpenGallery?: () => void;
 };
 
 
@@ -34,6 +35,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
     block = true,
     withDrop = true,
     deferPreviewUntilSuccess = true,
+    onOpenGallery
 }) => {
 
     const inputRef = useRef<HTMLInputElement>(null);
@@ -166,24 +168,80 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
                 </div>
             )}
 
-            {/* ✅ Primary, loading, disabled until upload completes */}
-            <Button
-                icon={!uploading ? <UploadOutlined /> : undefined}
-                size="large"
-                iconPosition="end"
-                type="text"
-                onClick={pickFile}
-                loading={uploading}
-                disabled={uploading}
-                block={block}
+            <div
                 style={{
-                    borderRadius: 12,   // ✅ rounder corners
-                    fontSize: 12,       // ✅ smaller text (try 13 or 12 for even smaller)
-                    //height: 42,         // optional: adjust height to match proportions
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 2,
+                    maxWidth: "100%",
+                    width: "100%",
+                    margin: "0 auto",
+                    padding: "6px 6px",
+                    background: "#161616ff",
+                    borderRadius: 16,
+                    border: "1px solid var(--ant-color-border)",
+                    boxShadow: "0 0 8px rgba(0,0,0,0.15)",
                 }}
             >
-                {uploading ? "Loading" : buttonText}
-            </Button>
+
+                <Button
+                    icon={!uploading ? <UploadOutlined /> : undefined}
+                    onClick={pickFile}
+                    iconPosition="end"
+                    size="large"
+                    color="default"
+                    variant="text"
+                    block
+                    loading={uploading}
+                    disabled={uploading}
+                    style={{
+                        borderRadius: 14,
+                        fontSize: 12,
+                    }}
+                >
+                    Upload Media
+                </Button>
+
+                <Button
+                    icon={<FolderAddOutlined />}
+                    onClick={onOpenGallery}
+                    iconPosition="end"
+                    size="large"
+                    color="default"
+                    variant="text"
+                    block
+                    //loading={uploading}
+                    disabled={uploading}
+                    style={{
+                        borderRadius: 14,
+                        fontSize: 12,
+                    }}
+                >
+                    Choose From Gallery
+                </Button>
+
+                {/* ✅ Primary, loading, disabled until upload completes 
+                <Button
+                    icon={!uploading ? <UploadOutlined /> : undefined}
+                    size="large"
+                    iconPosition="end"
+                    type="text"
+                    onClick={pickFile}
+                    loading={uploading}
+                    disabled={uploading}
+                    block={block}
+                    style={{
+                        borderRadius: 12,   // ✅ rounder corners
+                        fontSize: 12,       // ✅ smaller text (try 13 or 12 for even smaller)
+                        //height: 42,         // optional: adjust height to match proportions
+                    }}
+                >
+                    {uploading ? "Loading" : buttonText}
+                </Button>
+                */}
+
+            </div>
 
             {uploading && (
                 <div style={{ marginTop: 12 }}>

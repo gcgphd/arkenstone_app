@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { Card, Typography, notification, Button } from 'antd';
+import { Card, Typography } from 'antd';
 import { SendOutlined, UploadOutlined, FolderAddOutlined } from "@ant-design/icons";
 import { Flex, Grid } from "antd";
 import ContentCenter from './ContentCenter';
 import CustomUpload from './CustomUpload';
+import PreviewPanel from './PreviewPanel';
 import GenerateModelCard from './GenerateModelCard';
+import ModelModalGallery from './ModelModalGallery';
 import { BACKEND_URL } from "../config";
 import { useAuth } from "../context/AuthContext";
 import { useNotify } from "../context/NotificationContext";
 import { UploadAsset } from '../types/types';
-import { AntDesignOutlined } from '@ant-design/icons';
-import { ConfigProvider, Space } from 'antd';
-import { createStyles } from 'antd-style';
+import { useModels } from "../context/ModelsContext";
+
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -21,68 +22,19 @@ const { useBreakpoint } = Grid;
 const PLACEHOLDER_SRC = "/assets/photo_guide.png"//"https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
 
 
-const useStyle = createStyles(({ prefixCls, css }) => ({
-    grayGradientButton: css`
-    &.${prefixCls}-btn-primary:not([disabled]):not(.${prefixCls}-btn-dangerous) {
-      position: relative;
-      overflow: hidden;
-
-      > span {
-        position: relative;
-        z-index: 1;
-      }
-
-      /* GRADIENT BORDER BACKGROUND */
-      &::before {
-        content: '';
-        position: absolute;
-        inset: -1px;
-        border-radius: inherit;
-
-        /* 🔥 Black → dark gray → mid gray → light gray → white */
-        background: linear-gradient(
-          135deg,
-          #000000 0%,
-          #3a3a3a 25%,
-          #6e6e6e 50%,
-          #b5b5b5 75%,
-          #ffffff 100%
-        );
-
-        opacity: 1;
-        transition: opacity 0.3s ease;
-      }
-
-      /* BUTTON INNER AREA (flat dark background) */
-      &::after {
-        content: '';
-        position: absolute;
-        inset: 2px;
-        border-radius: inherit;
-        background: #1a1a1a; /* Slightly lighter than black */
-        z-index: 0;
-      }
-
-      &:hover::before {
-        opacity: 0.6; /* Slight fade for hover effect */
-      }
-    }
-  `,
-}));
-
-
-
 const UploadImageCard: React.FC = () => {
     const authCtx = useAuth();
     const uid = authCtx?.auth?.uid;
     const notify = useNotify();
-    const { styles } = useStyle();
 
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [modelUrl, setModelUrl] = React.useState<string | null>(null);
     const [modelAsset, setModelAsset] = useState<UploadAsset | null>(null);
-
-    // ✅ rename to setDoneUploading to match state
     const [doneUploading, setDoneUploading] = React.useState(false);
+    const [modelOpen, setModelOpen] = React.useState(false);
+
+
+    const { models, loading: loadingModels, error: modelsError } = useModels();
 
     const screens = useBreakpoint();
     const isMobile = !screens.sm;
@@ -98,8 +50,20 @@ const UploadImageCard: React.FC = () => {
         setDoneUploading(false);
         setPreviewUrl(null);
         setModelAsset(null);
+        setModelUrl(null);
         // (modelUrl is in GenerateModelCard, so it will clear itself)
     }, []);
+
+    const handleSelectModel = (asset: UploadAsset) => {
+        setModelAsset(asset);
+
+        // best URL (from your service pattern)
+        setModelUrl(
+            asset.url ||
+            asset.thumbUrl ||
+            null
+        );
+    };
 
 
     const handleSuccess = (resp: any) => {
@@ -131,6 +95,17 @@ const UploadImageCard: React.FC = () => {
         return isLt20M;
     };
 
+
+    if (modelUrl) {
+        return (
+            <PreviewPanel
+                previewUrl={modelUrl}
+                initialAsset={modelAsset ?? undefined}
+                onReset={handleTopReset}
+                isMobile={isMobile}
+            />);
+    }
+
     // ✅ When doneUploading is true, show the SimpleCard and hide the upload card
     if (doneUploading) {
         return (
@@ -149,6 +124,7 @@ const UploadImageCard: React.FC = () => {
 
     // Default: show the upload card with CustomUpload
     return (
+
         <Card
             hoverable
             style={{
@@ -174,6 +150,7 @@ const UploadImageCard: React.FC = () => {
                 },
             }}
         >
+
 
 
             <ContentCenter direction='vertical' style={{ minHeight: 0 }} gap={50}>
@@ -225,9 +202,21 @@ const UploadImageCard: React.FC = () => {
                         buttonText="Upload Media"
                         block
                         withDrop
+                        onOpenGallery={() => setModelOpen(true)}
                     />
 
-                    <div
+                    <ModelModalGallery
+                        open={modelOpen}
+                        onClose={() => setModelOpen(false)}
+                        items={models}
+                        loading={loadingModels}
+                        error={modelsError || undefined}
+                        onSelectModel={handleSelectModel}
+                    />
+
+
+
+                    {/* <div
                         style={{
                             display: "flex",
                             alignItems: "center",
@@ -274,7 +263,7 @@ const UploadImageCard: React.FC = () => {
                             Choose From Gallery
                         </Button>
 
-                    </div>
+                    </div> */}
 
                 </Flex>
 

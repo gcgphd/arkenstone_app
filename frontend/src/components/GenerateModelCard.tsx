@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Button, notification, Grid, Flex, Popover } from "antd";
+import { Button, Grid } from "antd";
 import { SendOutlined, CheckOutlined, CloseOutlined, SaveOutlined } from "@ant-design/icons";
 import { send_generation_job } from "../services/jobsService";
 import { saveModel } from "../services/modelService";
 import { UploadAsset } from '../types/types';
 import { useNotify } from "../context/NotificationContext";
+import { useModels } from "../context/ModelsContext";
 import PreviewPanel from "./PreviewPanel";
-import ActionButtonGroup from "./ActionButtonGroup";
 const { useBreakpoint } = Grid;
 
 
@@ -36,8 +36,8 @@ const GenerateModelCard: React.FC<GenerateModelCardProps> = ({
 
     const notify = useNotify();
     const screens = useBreakpoint();
+    const { refetch } = useModels();
     const isMobile = !screens.sm;
-    const [api, contextHolder] = notification.useNotification();
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [modelUrl, setModelUrl] = useState<string | null>(null);
@@ -125,12 +125,12 @@ const GenerateModelCard: React.FC<GenerateModelCardProps> = ({
         const assetToSave = modelAsset ?? imageAsset;
 
         if (!assetToSave) {
-            api.error({ message: "No model selected to save" });
+            notify('error', 'No model selected to save', '')
             return;
         }
 
         if (!assetToSave.gcs_path) {
-            api.error({ message: "Model has no storage path (gcs_path missing)" });
+            notify('error', 'Model has no storage path (gcs_path missing)" ', '')
             return;
         }
 
@@ -138,6 +138,10 @@ const GenerateModelCard: React.FC<GenerateModelCardProps> = ({
         try {
             const res = await saveModel(uid, assetToSave);
             notify('success', 'Model saved successfully', '')
+            // this part refetches the model in the 
+            // model context
+            await refetch();
+            notify('success', 'Models updated successfully', '')
         } catch (err: any) {
             console.error(err);
             notify('success', 'Error while saving model', '')
@@ -162,7 +166,6 @@ const GenerateModelCard: React.FC<GenerateModelCardProps> = ({
                 previewUrl={modelUrl}
                 initialAsset={modelAsset ?? undefined}
                 onReset={handleReset}
-                contextHolder={contextHolder}
                 isMobile={isMobile}
             />);
     }

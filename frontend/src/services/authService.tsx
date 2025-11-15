@@ -1,7 +1,7 @@
 import { BACKEND_URL } from "../config";
 
 
-export const login = async (email: string, password: string) => {
+export const apiLogin = async (email: string, password: string) => {
     const response = await fetch(
         //`${import.meta.env.VITE_API_BASE_URL}/auth/login`,
         `${BACKEND_URL}/signin`,
@@ -22,7 +22,7 @@ export const login = async (email: string, password: string) => {
 };
 
 
-export const logout = async () => {
+export const apiLogout = async () => {
     const response = await fetch(
         //`${import.meta.env.VITE_API_BASE_URL}/auth/login`,
         `${BACKEND_URL}/signout`,

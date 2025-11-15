@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { notification } from 'antd';
+import { notification, Button } from 'antd';
 import { token } from "../services/protectService";
 import ContentCenter from "../components/ContentCenter";
 import UploadImageCard from '../components/UploadImageCard';
 import { useAuth } from "../context/AuthContext";
+import GalleryModal from '../components/GalleryModal';
+import UserGalleryModal from './UserGallery';
+import { useJobs } from '../context/JobsContext';
 
 type NotificationType = 'success' | 'info' | 'warning' | 'error';
 
@@ -12,7 +15,9 @@ const MyProtectedComponent: React.FC = () => {
     const { auth, setAuth } = useAuth();
     const [api, contextHolder] = notification.useNotification();
     const [loading, setLoading] = useState(true);
+    const [gallery, setGallery] = useState(false);
     const navigate = useNavigate();
+    const { thumbnails } = useJobs();
 
     const openNotificationWithIcon = (type: NotificationType, title: string, message: string) => {
         api[type]({
@@ -27,13 +32,21 @@ const MyProtectedComponent: React.FC = () => {
             try {
                 const data = await token();
                 // store in global auth (this also persists to localStorage via your context)
-                setAuth({ uid: data.uid ?? null, email: data.email ?? null });
+
+                const nextUid = data.uid ?? null;
+                const nextEmail = data.email ?? null;
+
+                //only update auth if something actually changed
+                if (auth.uid !== nextUid || auth.email !== nextEmail) {
+                    console.log("Updating Auth");
+                    setAuth({ uid: nextUid, email: nextEmail });
+                }
                 console.log("Login Success");
                 setLoading(false);
             } catch (error: any) {
                 openNotificationWithIcon('error', 'Login error', error.message);
                 console.error("Login error:", error);
-                navigate("/login?a=b");
+                navigate("/login");
             }
 
         }
@@ -49,10 +62,23 @@ const MyProtectedComponent: React.FC = () => {
         return null;
     }
 
+    if (gallery) {
+        return (
+            <UserGalleryModal />
+        )
+    }
+
+
     return (
         <ContentCenter direction='vertical'>
             {contextHolder}
-            <UploadImageCard></UploadImageCard>
+            <Button onClick={() => setGallery(true)}></Button>
+
+            {gallery ? (
+                <UserGalleryModal />
+            ) : (
+                <UploadImageCard />
+            )}
         </ContentCenter>
     );
 };

@@ -127,6 +127,9 @@ def queue_generation_job_test():
     if uid is None:
         return jsonify({"error": "Missing uid"}), 400
     
+    user_prompt = data.get('prompt','')
+    print(user_prompt)
+    
     # prepare the job
     job_id = str(uuid4())
 
@@ -154,7 +157,14 @@ def queue_generation_job_test():
     
     # start the job
     #enqueue(run_nano_banana_job, db=db, job_id=job_id, uid=uid, media=file_inputs, prompt=dress_prompt)
-    enqueue(run_gemini_nano_banana_job, db=db, job_id=job_id, uid=uid, media=file_inputs, prompt=dress_prompt)
+    enqueue(
+        run_gemini_nano_banana_job, 
+        db=db, 
+        job_id=job_id, 
+        uid=uid, 
+        media=file_inputs, 
+        prompt=f'{dress_prompt} {user_prompt}'
+    )
 
     return jsonify({"ok": True, "job_id": job_id, "status": "running"}), 202
 

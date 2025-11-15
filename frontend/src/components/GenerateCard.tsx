@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Grid, Card } from "antd";
-import { PlusOutlined } from '@ant-design/icons';
-import { Image, Upload, message, Button } from 'antd';
+import { PlusOutlined, SendOutlined } from '@ant-design/icons';
+import { Image, Upload, message, Button, Input } from 'antd';
 import type { GetProp, UploadFile, UploadProps } from 'antd';
 import { BACKEND_URL } from "../config";
 
@@ -22,15 +22,19 @@ const getBase64 = (file: FileType): Promise<string> =>
 interface GenerateCardProps {
   uId?: string;
   isMobile?: boolean;
-  fileList: UploadFile[];                       // ✅ controlled
-  onFileListChange: (list: UploadFile[]) => void; // ✅ bubble changes up
+  isLoading?: boolean;
+  fileList: UploadFile[];
+  onFileListChange: (list: UploadFile[]) => void;
+  onGenerateClick?: (prompt: string) => void;
 }
 
 const GenerateCard: React.FC<GenerateCardProps> = ({
   uId,
   isMobile: forcedMobile,
+  isLoading,
   fileList,
   onFileListChange,
+  onGenerateClick
 }) => {
   const screens = useBreakpoint();
   const isMobile = forcedMobile ?? !screens.sm;
@@ -43,6 +47,7 @@ const GenerateCard: React.FC<GenerateCardProps> = ({
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
+  const [prompt, setPrompt] = React.useState("");
   //const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   // ✅ Use the instance API and render its context holder
@@ -127,7 +132,10 @@ const GenerateCard: React.FC<GenerateCardProps> = ({
 
   const uploadButton = (
     <Button
-      type="primary"         // 👈 uses theme's colorPrimary
+      //type="primary"
+      color="default"
+      variant="text"
+      size="small"
       icon={<PlusOutlined />}
       block
       style={{
@@ -136,7 +144,7 @@ const GenerateCard: React.FC<GenerateCardProps> = ({
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "var(--ant-color-primary)",
+        //backgroundColor: "var(--ant-color-primary)",
       }}
     >
     </Button>
@@ -147,11 +155,11 @@ const GenerateCard: React.FC<GenerateCardProps> = ({
       //hoverable
       style={{
         width: "100%",
-        //maxWidth: 420,
+        maxWidth: 720,
         //minWidth: 0,                  
         height: CARD_H,
         minHeight: 0,
-        flex: isMobile ? "0 1 auto" : "0 0 120px",
+        flex: isMobile ? "0 1 auto" : "0 0 200px",
         display: "flex",
         //flexDirection: "column",
         padding: CARD_PAD,
@@ -160,42 +168,91 @@ const GenerateCard: React.FC<GenerateCardProps> = ({
         body: {
           flex: 1,
           display: "flex",
-          overflow: "auto", // scroll if needed on phones
+          overflow: "hidden", // scroll if needed on phones
           padding: 10,
           minHeight: 0,
 
         },
       }}
     >
-      <Upload
-        action={`${BACKEND_URL}/upload_image_to_gcs_signed_tmp`}
-        data={{ uid: uId }}
-        listType="picture-card"
-        fileList={fileList}
-        onPreview={handlePreview}
-        onChange={handleChange}
-        multiple
-        style={{
-          height: '100%'
-        }}
-      >
-        {messageContextHolder}
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+        <Upload
+          action={`${BACKEND_URL}/upload_image_to_gcs_signed_tmp`}
+          data={{ uid: uId }}
+          listType="picture-card"
+          fileList={fileList}
+          onPreview={handlePreview}
+          onChange={handleChange}
+          multiple
+          style={{
+            height: '100%'
+          }}
+        >
+          {messageContextHolder}
 
-        {fileList.length >= 8 ? null : uploadButton}
-      </Upload>
-      {
-        previewImage && (
-          <Image
-            wrapperStyle={{ display: 'none' }}
-            preview={{
-              visible: previewOpen,
-              onVisibleChange: (visible) => setPreviewOpen(visible),
-              afterOpenChange: (visible) => !visible && setPreviewImage(''),
+          {fileList.length >= 8 ? null : uploadButton}
+        </Upload>
+        {
+          previewImage && (
+            <Image
+              wrapperStyle={{ display: 'none' }}
+              preview={{
+                visible: previewOpen,
+                onVisibleChange: (visible) => setPreviewOpen(visible),
+                afterOpenChange: (visible) => !visible && setPreviewImage(''),
+              }}
+              src={previewImage}
+            />
+          )
+        }
+
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 2,
+            //maxWidth: "100%",
+            width: "100%",
+            margin: "0 auto",
+            padding: "6px 6px",
+            background: "#161616ff",
+            borderRadius: 16,
+            border: "1px solid var(--ant-color-border)",
+            boxShadow: "0 0 8px rgba(0,0,0,0.15)",
+          }}
+        >
+
+          <Button
+            icon={<SendOutlined />}
+            loading={isLoading}
+            disabled={isLoading}
+            onClick={() => onGenerateClick?.(prompt)}
+            block
+            size="large"
+            color="default"
+            variant="text"
+            style={{
+              borderRadius: 14,
+              fontSize: 12,
+              maxWidth: "20%"
             }}
-            src={previewImage}
-          />
-        )
-      }
+          >
+            Generate
+          </Button>
+
+          <Input
+            onChange={(e) => setPrompt(e.target.value)}
+            disabled={isLoading}
+            style={{ width: "100%", flexGrow: 1 }}
+            placeholder="Type your Prompt here"
+            variant="borderless" />
+
+        </div>
+
+
+      </div>
     </Card >
   );
 };

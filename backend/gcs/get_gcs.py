@@ -7,6 +7,46 @@ from datetime import timedelta
 GCS_BUCKET = os.environ["GCS_BUCKET"]
 
 
+def get_files_in_folder(client, folder: str, bucket: str = GCS_BUCKET):
+    """
+    Return a list of object names under the given 'folder' prefix in the bucket.
+
+    Args:
+        client: google.cloud.storage.Client
+        folder: logical "folder" (prefix), e.g. "user/123/jobs/abc"
+        bucket: bucket name (defaults to GCS_BUCKET env var)
+
+    Returns:
+        List[str]: list of blob names (full object paths) under that prefix.
+    """
+    # Normalize folder to always end with a slash
+    if folder and not folder.endswith("/"):
+        prefix = folder + "/"
+    else:
+        prefix = folder
+
+    bucket_obj = client.bucket(bucket)
+
+    blobs = client.list_blobs(bucket_obj, prefix=prefix)
+
+    items = []
+    for blob in blobs:
+        
+        # Skip folder marker objects
+        if blob.name.endswith("/"):
+            continue
+
+        items.append({
+            "gcs_path": blob.name,
+            "filename": blob.name.split("/")[-1],
+            "size": blob.size,
+            "mimetype": blob.content_type,
+        })
+
+    return items
+
+
+
 def get_signed_url(client, gcs_path: str, expires_hours: int = 24) -> dict:
     """
     Generate a signed GET URL for an existing object in the private bucket.

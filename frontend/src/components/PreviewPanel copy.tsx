@@ -10,7 +10,6 @@ import { useJobPolling } from "../services/useJobPolling";
 import { pollingHelpers } from "../services/pollingService";
 import { getUserJobs } from "../services/jobsService";
 import { useAuth } from "../context/AuthContext";
-import { useJobs } from "../context/JobsContext";
 import { UploadAsset } from '../types/types';
 import { queue_generation_job } from "../services/jobsService";
 
@@ -79,7 +78,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   isMobile: forcedMobile
 }) => {
 
-  const { thumbnails, addLoadingThumb, updateThumb } = useJobs();
+
   const { auth } = useAuth();
   const screens = useBreakpoint();
   const isMobile = forcedMobile ?? !screens.sm;
@@ -90,11 +89,12 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
   const [galleryFiles, setGalleryFiles] = React.useState<UploadFile<any>[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
-
+  const [thumbnails, setThumbnails] = React.useState<ThumbItem[]>([]);
 
 
   const jobThumbRef = React.useRef<Map<string, string>>(new Map()); // jobId -> thumbId
-
+  const didInitRef = React.useRef(false);
+  const mountedRef = React.useRef(true);
 
 
   // Get User Id from app context orlocal storage.
@@ -110,6 +110,20 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
     return undefined;
   }, [auth?.uid]);
+
+  const addLoadingThumb = React.useCallback(() => {
+    const id = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    setThumbnails((prev) => [
+      { id, src: "/assets/image-loader-light.gif", alt: "Generating…", status: "loading" },
+      ...prev,
+    ]);
+    return id;
+  }, []);
+
+  const updateThumb = React.useCallback((id: string, changes: Partial<ThumbItem>) => {
+    setThumbnails((prev) => prev.map((t) => (t.id === id ? { ...t, ...changes } : t)));
+  }, []);
+
 
 
   const doneFiles = React.useMemo(
@@ -167,6 +181,57 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   React.useEffect(() => {
     startPollingRef.current = startPolling;
   }, [startPolling]);
+
+
+  // set true on real mount, false on unmount
+  React.useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+
+  React.useEffect(() => {
+    console.log("Init Gallery");
+    console.log("didInit before:", didInitRef.current, "activeUserId:", activeUserId);
+
+    if (didInitRef.current) return;
+    if (!activeUserId) return;
+
+    didInitRef.current = true; // lock
+
+    (async () => {
+      try {
+        const raw = await getUserJobs(activeUserId);
+
+        // 🔐 double-check mount right before updating state
+        if (!mountedRef.current) {
+          console.log("Skip update: unmounted");
+          return;
+        }
+
+        const jobs = normalizeJobs(raw);
+
+        // add logs to prove it runs
+        console.log("About to set thumbnails", jobs.length);
+
+        setThumbnails(jobs.map(jobToThumb));
+
+        jobs.forEach((j: any) => {
+          const id = j?.id ?? j?.job_id ?? j?.uuid;
+          const status = String(j?.status ?? "").toLowerCase();
+          if (id && pollingHelpers.isInProgress(status)) {
+            jobThumbRef.current.set(id, id);
+            startPollingRef.current(id, activeUserId);
+          }
+        });
+      } catch (e: unknown) {
+        if ((e as any)?.name !== "AbortError") console.error("Error loading jobs", e);
+      }
+    })();
+  }, [activeUserId]);
+
 
 
   // ---- enqueue a new job; start its independent poller

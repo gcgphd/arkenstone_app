@@ -16,7 +16,7 @@ type Props = {
     onClickThumb?: (thumb: ThumbItem) => void;
 };
 
-const ThumbnailRail: React.FC<Props> = ({ thumbnails, width = 88, onClickThumb }) => {
+const ThumbnailRail: React.FC<Props> = ({ thumbnails, width = 72, onClickThumb }) => {
     return (
         <div
             style={{

@@ -3,3 +3,30 @@ body {
   padding: 0;
   margin: 0;
 }
+
+/* Hide scrollbar (Chrome, Safari, Edge) */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar (Firefox) */
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+/* Hide scrollbar just for this modal body */
+
+/* Chrome, Edge, Safari */
+.models-modal .ant-modal-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Firefox */
+.models-modal .ant-modal-body {
+  scrollbar-width: none;
+  /* hides scrollbar */
+  -ms-overflow-style: none;
+  /* IE/Edge legacy */
+}

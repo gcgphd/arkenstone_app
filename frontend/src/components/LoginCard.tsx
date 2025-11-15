@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { Card, Input, Form, Button, Checkbox, Flex, notification } from 'antd';
-import { login } from "../services/authService";
+import { apiLogin } from "../services/authService";
 
 type NotificationType = 'success' | 'info' | 'warning' | 'error';
 
@@ -21,7 +21,7 @@ const LoginCard: React.FC = () => {
     const onFinish = async (values: any) => {
         //setLoading(true);
         try {
-            const data = await login(values.email, values.password);
+            const data = await apiLogin(values.email, values.password);
             openNotificationWithIcon('success', 'Login successful!', '');
             //setIsLoggedIn(true);
             navigate("/");

@@ -8,6 +8,8 @@ import { Layout, ConfigProvider, Grid, theme } from 'antd';
 import type { ThemeConfig } from 'antd';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { ModelsProvider } from "./context/ModelsContext";
+import { JobsProvider } from "./context/JobsContext";
 
 const { Content, Sider, Header } = Layout;
 const { useBreakpoint } = Grid;
@@ -15,8 +17,8 @@ const { useBreakpoint } = Grid;
 const config: ThemeConfig = {
   algorithm: theme.darkAlgorithm,
   token: {
-    colorPrimary: '#F9442E',
-    colorLink: '#F9442E',
+    colorPrimary: '#ddddddff',//'#F9442E',
+    colorLink: '#ddddddff',//'#F9442E',
     fontFamily: "'DM Sans', sans-serif",
   },
   components: {
@@ -32,87 +34,92 @@ function App() {
     <AuthProvider>
       <ConfigProvider theme={config}>
         <NotificationProvider>
-          <Router>
-            <Layout
-              style={{
-                height: "100dvh",
-                padding: 0,
-                margin: 0,
-                display: "flex",
-                flexDirection: "column",
-                overflow: "visible",
-              }}
-            >
-              {/* ✅ Header only on mobile */}
-              {isMobile && (
-                <Header
-                  style={{
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 10,
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    background: "#131313",
-                  }}
-                />
-              )}
+          <ModelsProvider>
+            <JobsProvider>
 
-              <Layout
-                style={{
-                  flex: 1,
-                  minHeight: 0,
-                  flexDirection: "row",
-                }}
-              >
-                {/* ✅ Sider always visible on desktop, hidden on mobile (no scrollbars) */}
-                {!isMobile && (
-                  <Sider
-                    width={260}
-                    style={{
-                      height: "100%",
-                      minHeight: 0,
-                      overflow: "hidden", // ✅ no scrollbar
-                      top: 0,
-                      left: 0,
-                    }}
-                  >
-                    <CustomMenu />
-                  </Sider>
-                )}
-
-                <Content
+              <Router>
+                <Layout
                   style={{
-                    margin: 0,
-                    height: "100%",
-                    minHeight: 0,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
+                    height: "100dvh",
                     padding: 0,
-                    overflow: "auto", // ✅ only content scrolls if needed
+                    margin: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "visible",
                   }}
                 >
-                  <div
+                  {/* ✅ Header only on mobile */}
+                  {isMobile && (
+                    <Header
+                      style={{
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 10,
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        background: "#131313",
+                      }}
+                    />
+                  )}
+
+                  <Layout
                     style={{
-                      width: "100%",
-                      height: "100%",
+                      flex: 1,
                       minHeight: 0,
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
+                      flexDirection: "row",
                     }}
                   >
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/gallery" element={<UserGalleryModal />} />
-                    </Routes>
-                  </div>
-                </Content>
-              </Layout>
-            </Layout>
-          </Router>
+                    {/* ✅ Sider always visible on desktop, hidden on mobile (no scrollbars) */}
+                    {!isMobile && (
+                      <Sider
+                        width={260}
+                        style={{
+                          height: "100%",
+                          minHeight: 0,
+                          overflow: "hidden", // ✅ no scrollbar
+                          top: 0,
+                          left: 0,
+                        }}
+                      >
+                        <CustomMenu />
+                      </Sider>
+                    )}
+
+                    <Content
+                      style={{
+                        margin: 0,
+                        height: "100%",
+                        minHeight: 0,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        padding: 0,
+                        overflow: "auto", // ✅ only content scrolls if needed
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          minHeight: 0,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Routes>
+                          <Route path="/" element={<Home />} />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/gallery" element={<UserGalleryModal />} />
+                        </Routes>
+                      </div>
+                    </Content>
+                  </Layout>
+                </Layout>
+              </Router>
+            </JobsProvider>
+          </ModelsProvider>
         </NotificationProvider>
       </ConfigProvider>
     </AuthProvider >

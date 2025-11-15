@@ -2,22 +2,25 @@ import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { UserOutlined } from '@ant-design/icons';
 import { Button, Flex, Popover, Grid } from 'antd';
-import { logout } from "../services/authService";
+import { apiLogout } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
 const { useBreakpoint } = Grid;
 
 
 const CustomMenu: React.FC = () => {
 
+    const { logout: ctxLogout } = useAuth();
     const navigate = useNavigate();
     const screens = useBreakpoint(); // 
 
     const onLogoutClick = async () => {
         //setLoading(true);
         try {
-            const data = await logout();
-            //openNotificationWithIcon('success', 'Logout successful!', '');
-            //setIsLoggedIn(true);
+            const data = await apiLogout();
+
+            ctxLogout();
+
             navigate("/login");
         } catch (error: any) {
             //openNotificationWithIcon('error', 'Login error', error.message);

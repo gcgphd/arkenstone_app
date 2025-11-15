@@ -28,9 +28,40 @@ def delete_gcs_folder(
         blobs.append(folder_blob)
 
     if not blobs:
-        print(f"ℹ️ No objects found at: gs://{bucket_name}/{prefix}")
+        print(f"No objects found at: gs://{bucket_name}/{prefix}")
         return 0
 
     bucket.delete_blobs(blobs)
-    print(f"🗑️ Deleted {len(blobs)} objects for folder gs://{bucket_name}/{normalized}")
+    print(f"Deleted {len(blobs)} objects for folder gs://{bucket_name}/{normalized}")
     return len(blobs)
+
+
+def delete_gcs_file(
+    client,
+    gcs_path: str,
+    bucket_name: str = GCS_BUCKET,
+) -> bool:
+    """
+    Delete a single object in GCS.
+    Returns True if the object existed and was deleted, False otherwise.
+    """
+
+    # Normalize: allow "gs://bucket/path/to/file" or just "path/to/file"
+    if gcs_path.startswith("gs://"):
+        _, _, rest = gcs_path.partition("gs://")
+        bucket_part, _, object_name = rest.partition("/")
+        if bucket_part != bucket_name:
+            raise ValueError(f"Expected bucket '{bucket_name}', got '{bucket_part}'")
+    else:
+        object_name = gcs_path.strip("/")  # e.g. "user/uid/models/file.png"
+
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(object_name)
+
+    if not blob.exists():
+        print(f"No such object: gs://{bucket_name}/{object_name}")
+        return False
+
+    blob.delete()
+    print(f"Deleted object gs://{bucket_name}/{object_name}")
+    return True
